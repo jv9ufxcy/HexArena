@@ -1,0 +1,65 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!78 &1
+TagManager:
+  serializedVersion: 2
+  tags:
+  - Ground
+  layers:
+  - Default
+  - TransparentFX
+  - Ignore Raycast
+  - 
+  - Water
+  - UI
+  - Wall
+  - Projectile
+  - Player
+  - Enemy
+  - EnemyProjectile
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  m_SortingLayers:
+  - name: BG
+    uniqueID: 1427665135
+    locked: 0
+  - name: BGFX
+    uniqueID: 2600089557
+    locked: 0
+  - name: ITEM
+    uniqueID: 1645905105
+    locked: 0
+  - name: Default
+    uniqueID: 0
+    locked: 0
+  - name: ACTOR
+    uniqueID: 3645096707
+    locked: 0
+  - name: FX
+    uniqueID: 467167529
+    locked: 0
+  - name: FG
+    uniqueID: 2134550335
+    locked: 0
+  - name: UI
+    uniqueID: 1376470459
+    locked: 0
