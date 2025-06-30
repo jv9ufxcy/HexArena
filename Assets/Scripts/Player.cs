@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using DG.Tweening;
+using UnityEngine.SceneManagement;
 
 [RequireComponent(typeof(Rigidbody2D))]
 public class Player : MonoBehaviour,IHittable
@@ -12,8 +13,8 @@ public class Player : MonoBehaviour,IHittable
 
     [Header("Stats")]
     [SerializeField]
-    private float maxHealth;
-    private float curHealth;
+    private int maxHealth;
+    private int curHealth;
 
     [Header("Movement")]
     [SerializeField] private float moveSpeed;
@@ -21,7 +22,7 @@ public class Player : MonoBehaviour,IHittable
     Vector2 moveAxis,lookAxis;
     [SerializeField] private PlayerControls controls;
     private InputAction move, aim, fire;
-    private bool lockRotation = false;
+    [SerializeField]private bool lockRotation = false;
 
     [Header("Shooting")]
     [SerializeField] GameObject[] bullets;
@@ -30,8 +31,8 @@ public class Player : MonoBehaviour,IHittable
     private Ray ray;
     private RaycastHit rayHit;
     [SerializeField] private LineRenderer trajectoryLine;
-    [SerializeField] private float trajectoryMaxLength = 16f;
-    [SerializeField] private int reflections = 2;
+    [SerializeField] private float trajectoryMaxLength = 12f;
+    [SerializeField] private int reflections = 3;
     [SerializeField] private LayerMask target;
     [Header("Ammo")]
     [Range(0, 5)]
@@ -118,36 +119,33 @@ public class Player : MonoBehaviour,IHittable
             UpdateAnimator();
             if (lockRotation)
             {
-                LineRend2DReflections();
+                LineRend2DReflections(transform.position, weaponOffset.up);
             }
         }
     }
-    private void OnGUI()
+    private void LineRend2DReflections(Vector3 pos, Vector3 dir)
     {
-        
-    }
-    private void LineRend2DReflections()
-    {
-        Debug.DrawRay(transform.position, weaponOffset.up * trajectoryMaxLength, Color.green);
-
-        Ray2D ray2D = new Ray2D (transform.position,weaponOffset.up);
-        float remainderLength = trajectoryMaxLength;
-        RaycastHit2D hit2D;
+        trajectoryLine.SetPosition(0, transform.position);
         trajectoryLine.positionCount = 1;
-        trajectoryLine.SetPosition(0,transform.position);
 
         for (int i = 0; i < reflections; i++)
         {
-            if (hit2D = Physics2D.Raycast(ray2D.origin, ray2D.direction, remainderLength, target))
+            Debug.DrawRay(pos, dir * trajectoryMaxLength, Color.green);
+            Ray2D ray2D = new Ray2D(pos, dir);
+            float remainderLength = trajectoryMaxLength;
+            RaycastHit2D hit2D = Physics2D.Raycast(ray2D.origin, ray2D.direction, remainderLength, target);
+            if (hit2D)
             {
+                pos = hit2D.point;
+                dir = Vector3.Reflect(dir, hit2D.normal);
                 trajectoryLine.positionCount += 1;
                 trajectoryLine.SetPosition(trajectoryLine.positionCount - 1, hit2D.point);
-                ray2D = new Ray2D(hit2D.point, Vector3.Reflect(ray2D.direction, hit2D.normal));
-                Debug.Log(hit2D.transform.name);
-                if (hit2D.collider.tag != "Ground")
-                {
-                    break;
-                }
+                //ray2D = new Ray2D(hit2D.point, Vector3.Reflect(ray2D.direction, hit2D.normal));
+
+                //if (hit2D.collider.tag != "Ground")
+                //{
+                //    break;
+                //}
             }
             else
             {
@@ -156,39 +154,9 @@ public class Player : MonoBehaviour,IHittable
             }
         }
     }
-    //private void LineRendReflections()
-    //{
-    //    Vector3 up = weaponOffset.TransformDirection(weaponOffset.up) * trajectoryMaxLength;
-    //    Debug.DrawRay(weaponOffset.position, weaponOffset.up * trajectoryMaxLength, Color.green);
-
-    //    ray = new Ray (weaponOffset.position,weaponOffset.up);
-    //    trajectoryLine.positionCount = 1;
-    //    trajectoryLine.SetPosition(0,transform.position);
-    //    float remainderLength = trajectoryMaxLength;
-
-    //    for (int i = 0; i < reflections; i++)
-    //    {
-    //        if (Physics.Raycast(ray.origin, ray.direction, out rayHit, remainderLength))
-    //        {
-    //            trajectoryLine.positionCount += 1;
-    //            trajectoryLine.SetPosition(trajectoryLine.positionCount - 1, rayHit.point);
-    //            ray = new Ray(rayHit.point, Vector3.Reflect(ray.direction, rayHit.normal));
-    //            Debug.Log(rayHit.transform.name);
-    //            if (rayHit.collider.tag != "Ground")
-    //            {
-    //                break;
-    //            }
-    //        }
-    //        else
-    //        {
-    //            trajectoryLine.positionCount += 1;
-    //            trajectoryLine.SetPosition(trajectoryLine.positionCount - 1, ray.origin + ray.direction * remainderLength);
-    //        }
-    //    }
-    //}
     private static void Death()
     {
-        //Debug.Log("death");
+        SceneManager.LoadScene(SceneManager.GetActiveScene().name);
     }
 
     public void Reload(int min,int max)
@@ -233,6 +201,7 @@ public class Player : MonoBehaviour,IHittable
     private void Aim(InputAction.CallbackContext context)
     {
         lockRotation = true;
+        trajectoryLine.positionCount = 1;
         if (state == PlayerState.neutral)//if neutral control
         {
 
@@ -278,10 +247,18 @@ public class Player : MonoBehaviour,IHittable
             }
         }
     }
-    public void DoDamage(float damage)
+    public void DoHeal(int healthGain)
     {
-        spriteRend.transform.DOKill();
+        curHealth += healthGain;
+        curHealth = Mathf.Clamp(curHealth, 0, maxHealth);
+        uiScript.HealthChange((int)curHealth);
+        StartCoroutine(FlashWhiteDamage(2));
+    }    
+    public void DoDamage(int damage)
+    {
+        spriteRend.transform.DOComplete();
         curHealth -= damage;
+        curHealth = Mathf.Clamp(curHealth, 0, maxHealth);
         uiScript.HealthChange((int)curHealth);
         GameEngine.SetHitPause(15);
         stunTimer = .15f;
@@ -349,7 +326,7 @@ public class Player : MonoBehaviour,IHittable
 
     }
 
-    public void Hit(int dam,int effect, Vector2 dir)
+    public void Hit(int dam,int effect,int bounceLvl, Vector2 dir)
     {
         DeSpell();
         if (dam>0)
@@ -358,9 +335,10 @@ public class Player : MonoBehaviour,IHittable
             rb.velocity = dir * 8;
             PlaySound(hurtBark);
         }
-        SpellEffect(effect);
+        SpellEffect(effect, bounceLvl);
+        DamagePopup.Create(transform.position, dam, bounceLvl);
     }
-    void SpellEffect(int effect)
+    void SpellEffect(int effect, int level)
     {
         switch (effect)
         {
@@ -369,7 +347,7 @@ public class Player : MonoBehaviour,IHittable
             case 1://Skewer damages on contact
                 break;
             case 2://Guardians applies shield
-                ApplyGuardians();
+                ApplyGuardians(level);
                 break;
             case 3://Polymorph changes movement to grid based for 6 seconds or until damaged
                 ApplyPolymorph();
@@ -381,9 +359,12 @@ public class Player : MonoBehaviour,IHittable
                 break;
         }
     }
-    public int numOfGuardians = 1;
+    //public int numOfGuardians = 1;
     private List<GameObject> guardiansCreated= new List<GameObject>();
-    void ApplyGuardians()
+
+    public int CurHealth { get => curHealth; set => curHealth = value; }
+
+    void ApplyGuardians(int numOfGuardians)
     {
         guardianTimer = 6;
         for (int i = 0; i < numOfGuardians; i++)

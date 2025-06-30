@@ -73,10 +73,11 @@ public class Enemy : MonoBehaviour,IHittable
         eState = EnemyState.stunned;
         spriteRend.DOColor(Color.white, .8f);
     }
-
+    public Spawner parent;
     private void OnDisable()
     {
-        Spawner.spawner.RemoveEnemyFromList(gameObject);
+        if (parent != null)
+            parent.RemoveEnemyFromList(gameObject);
     }
     private void SetMaxHealth()
     {
@@ -121,7 +122,7 @@ public class Enemy : MonoBehaviour,IHittable
         eState = EnemyState.stunned;
     }
 
-    public void Hit(int dam, int effect, Vector2 dir)
+    public void Hit(int dam, int effect,int bounceLvl, Vector2 dir)
     {
         if (dam > 0)
         {
@@ -129,9 +130,10 @@ public class Enemy : MonoBehaviour,IHittable
             DoDamage(dam);
             rb.velocity = dir * 8;
         }
-        SpellEffect(effect);
+        SpellEffect(effect, bounceLvl);
+        DamagePopup.Create(transform.position, dam, bounceLvl);
     }
-    void SpellEffect(int effect)
+    void SpellEffect(int effect,int level)
     {
         switch (effect)
         {
@@ -140,7 +142,7 @@ public class Enemy : MonoBehaviour,IHittable
             case 1://Skewer damages on contact
                 break;
             case 2://Guardians applies shield
-                ApplyGuardians();
+                ApplyGuardians(level);
                 break;
             case 3://Polymorph changes movement to grid based for 6 seconds or until damaged
                 ApplyPolymorph();
@@ -275,12 +277,23 @@ public class Enemy : MonoBehaviour,IHittable
         //explode now
         ShakeCamera(1, .25f);
         GameEngine.GlobalPrefab(0, this.gameObject);
+        HealthChance();
         if (eType == EnemyType.bomber)
         {
             //FireArrow(1, 8, 8);
             FireBulletWave(1, 8, 16, 1, 1, 0, 360, 0);
         }
         gameObject.SetActive(false);
+    }
+    private void HealthChance()
+    {
+        float healthOverMax = 1 - GameEngine.gameEngine.mainCharacter.CurHealth / 12f;
+        int dropRate = Mathf.RoundToInt(healthOverMax * 100);
+        int randomChance = UnityEngine.Random.Range(0,100);
+        if (randomChance>=dropRate)
+        {
+            GameEngine.GlobalPrefab(6, this.gameObject);
+        }
     }
     [SerializeField] private int invulFlickerRate = 4;
     private IEnumerator BlinkColor(int intervalsOfFive)
@@ -469,11 +482,11 @@ public class Enemy : MonoBehaviour,IHittable
         else
             spriteRend.gameObject.transform.localPosition = Vector3.zero;
     }
-    public int numOfGuardians = 1;
+    //public int numOfGuardians = 1;
     private float guardianTimer,stunTimer;
     [SerializeField] private GameObject[] magicObjects;
     private List<GameObject> guardiansCreated = new List<GameObject>();
-    void ApplyGuardians()
+    void ApplyGuardians(int numOfGuardians)
     {
         PlaySound(ghostBark);
         guardianTimer = 6;

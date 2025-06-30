@@ -21,7 +21,7 @@ public class Bullet : MonoBehaviour
     {
         transform.Translate(velocity * speed * Time.deltaTime);
     }
-    public int projectileIndex = 0;
+    public int projectileIndex = 0, bounceLvl;
     public string tagToHit = "Player";
     private void OnTriggerEnter2D(Collider2D other)
     {
@@ -31,7 +31,7 @@ public class Bullet : MonoBehaviour
         if (victim != null&&!enemies.Contains(other))
         {
             enemies.Add(other);
-            victim.Hit(damage, projectileIndex, transform.up);
+            victim.Hit(damage, projectileIndex,bounceLvl, transform.up);
             Destroy(gameObject, .2f);
         }
     }

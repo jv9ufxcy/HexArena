@@ -6,20 +6,20 @@ using UnityEngine.TextCore.Text;
 public class GuardianSatellite : MonoBehaviour
 {
     public GameObject queen;
-    [SerializeField]private float speed=4,angle,radius=1, lifeTime = 6;
+    [SerializeField]private float speed=4,angle,radius=1/*, lifeTime = 6*/;
 
     // Update is called once per frame
     void FixedUpdate()
     {
         Satellite();
-        if (lifeTime>0)
-        {
-            lifeTime-=Time.fixedDeltaTime;
-        }
-        else
-        {
-            Destroy(gameObject);
-        }
+        //if (lifeTime>0)
+        //{
+        //    lifeTime-=Time.fixedDeltaTime;
+        //}
+        //else
+        //{
+        //    Destroy(gameObject);
+        //}
     }
     private void Satellite()
     {
@@ -43,7 +43,7 @@ public class GuardianSatellite : MonoBehaviour
         Vector2 direction = (this.transform.position-other.transform.position).normalized;
         if (hit != null && other.gameObject != queen)
         {
-            hit.Hit(1, 0,direction);
+            hit.Hit(1, 0, 0,direction);
         }
     }
 }

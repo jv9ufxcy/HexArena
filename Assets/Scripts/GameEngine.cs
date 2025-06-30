@@ -17,6 +17,8 @@ public class GameEngine : MonoBehaviour
     public Player mainCharacter;
 
     public GameObject[] globalPrefabs;
+
+    public Transform DamagePopup;
     
     // Use this for initialization
     void Awake ()

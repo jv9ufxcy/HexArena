@@ -18,11 +18,13 @@ public class Wave
 }
 public class Spawner : MonoBehaviour
 {
-    public static Spawner spawner;
+    //public static Spawner spawner;
     [Range(1f, 15f)]
     public float range = 5f;
 
     public bool canSpawn = true;
+    private enum spawnState { Idle, Active, Conclusion }
+    [SerializeField] private spawnState battleState;
 
     [SerializeField]private int waveDuration;
     private float waveTimer;
@@ -38,15 +40,15 @@ public class Spawner : MonoBehaviour
     [SerializeField] private GameObject bombPrefab;
     public static ObjectPool<PoolObject> bombPool;
     //Sophie Spawner
-    [SerializeField] private float timeToWaitBetweenWaves = 10;
+    [SerializeField] private float timeToWaitBetweenWaves = 8;
     [SerializeField] private List<Wave> waves = new List<Wave>();
     [SerializeField] private List<Transform> possibleSpawnPoints = new List<Transform>();
 
-    private List<Enemy> LivingEnemies = new List<Enemy>();
+    //private List<Enemy> LivingEnemies = new List<Enemy>();
     private List<Transform> pointsClaimedPerWave = new List<Transform>();//this will store the points that each enemy will use for spawning so that no one doubles up.
     private void Awake()
     {
-        spawner = this;
+        //spawner = this;
         //create pool instance with prefab reference and push&pull actions
         slimePool = new ObjectPool<PoolObject>(slimePrefab, CallOnPull, CallOnPush);
         shrumPool = new ObjectPool<PoolObject>(shrumPrefab, CallOnPull, CallOnPush);
@@ -56,12 +58,35 @@ public class Spawner : MonoBehaviour
     private void Start()
     {
         //GenerateWave();
-        waveTimer=waveDuration;
-        StartCoroutine(StartWaves());
+        
+    }
+    private void OnTriggerEnter2D(Collider2D collision)
+    {
+        if (collision.CompareTag("Player"))
+        {
+            if (battleState == spawnState.Idle)
+            {
+                canSpawn = true;
+                waveTimer = waveDuration;
+                StartCoroutine(StartWaves());
+                battleState = spawnState.Active;
+            }
+        }
+        
+    }
+    private void OnTriggerExit2D(Collider2D collision)
+    {
+        if (collision.CompareTag("Player"))
+        {
+            if (battleState == spawnState.Conclusion)
+            {
+                battleState = spawnState.Idle;
+            }
+        } 
     }
     private void Update()
     {
-        if (canSpawn)
+        if (battleState==spawnState.Active)
         {
             if (waveTimer > 0)
             {
@@ -79,7 +104,7 @@ public class Spawner : MonoBehaviour
     private void SummonEnemy(int enemyIndex,Vector3 pos)
     {
        
-        GameObject enemy;
+        GameObject enemy = new GameObject();
         switch (enemyIndex)
         {
             case 0:
@@ -97,11 +122,14 @@ public class Spawner : MonoBehaviour
             default:
                 break;
         }
+        spawnedEnemies.Add(enemy);
+        Enemy spawn = enemy.GetComponent<Enemy>();
+        spawn.parent = this;
         
     }
     IEnumerator StartWaves()
     {
-        yield return new WaitForSeconds(2);
+        yield return new WaitForSeconds(timeToWaitBetweenWaves);
         //bState = battleState.active;
         for (int b = 0; b < waves.Count; b++)
         {
@@ -119,7 +147,7 @@ public class Spawner : MonoBehaviour
             }
             yield return new WaitForSeconds(waves[b].waveDuration);
         }
-        Debug.Log("waveComplete");
+        canSpawn = false;
     }
 
     Transform GetRandomTransform()//returns a random transform from the list given
@@ -141,13 +169,20 @@ public class Spawner : MonoBehaviour
         {
             spawnedEnemies.Remove(go);
         }
+        if (battleState == spawnState.Active)
+        {
+            if (!canSpawn && spawnedEnemies.Count <= 0)
+            {
+                battleState = spawnState.Conclusion;
+            }
+        }
     }
-    [System.Serializable]
-    public class Enemy
-    {
-        public GameObject enemyPrefab;
-        public int cost;
-    }
+    //[System.Serializable]
+    //public class Enemy
+    //{
+    //    public GameObject enemyPrefab;
+    //    public int cost;
+    //}
     private void CallOnPull(PoolObject poolObject)
     {
 

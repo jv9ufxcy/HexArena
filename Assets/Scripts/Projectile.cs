@@ -9,7 +9,7 @@ public class Projectile : MonoBehaviour
 {
     public float speed, bounceForce = 0.8f;
     [SerializeField]
-    private int damage;
+    private int damage, bouncePower = 1;
     [SerializeField] private float lifeTime = 3;
     private Vector2 target = new Vector2(), direction = new Vector2();
     [SerializeField] private float punchScaleDur = .125f;
@@ -75,25 +75,31 @@ public class Projectile : MonoBehaviour
         IHittable hit = other.GetComponent<IHittable>();
         if (hit != null)
         {
-            hit.Hit(damage, (int)spellEffect, direction);
+            
             audioManager.PlaySound(hitSound);
             switch (spellEffect)
             {
                 case Spell.Wound:
+                    hit.Hit(damage, (int)spellEffect, bouncePower, direction);
                     break;
                 case Spell.Skewer:
                     Physics2D.IgnoreCollision(other,GetComponent<Collider2D>(), true);
+                    hit.Hit(damage*bouncePower, (int)spellEffect, bouncePower, direction);
                     break;
                 case Spell.Guardian:
+                    hit.Hit(damage, (int)spellEffect, bouncePower, direction);
                     EndLife();
                     break;
                 case Spell.Frog:
+                    hit.Hit(damage, (int)spellEffect, bouncePower, direction);
                     EndLife();
                     break;
                 case Spell.Freeze:
+                    hit.Hit(damage, (int)spellEffect, bouncePower, direction);
                     EndLife();
                     break;
                 case Spell.Explosion:
+                    hit.Hit(damage, (int)spellEffect, bouncePower, direction);
                     EndLife();
                     break;
                 default:
@@ -129,6 +135,7 @@ public class Projectile : MonoBehaviour
             rb.velocity = (direction * Mathf.Max(speed, 0f));
             float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
             transform.rotation = Quaternion.Euler(new Vector3(0, 0, angle - 90f));
+            bouncePower++;
             canHitSelf = true;
             BounceEffect();
         }

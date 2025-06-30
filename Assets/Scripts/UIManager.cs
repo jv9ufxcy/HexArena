@@ -9,7 +9,7 @@ public class UIManager : MonoBehaviour
 {
     public GameObject player, ammoSlots;
     private Player playerScript;
-    public Image healthDie;
+    public TextMeshPro healthDie;
     public List<Image> gunChambers, gunAmmoLoaded;
     private Color ammoColor;
     public List<int> gunChamberStorage;
@@ -31,7 +31,7 @@ public class UIManager : MonoBehaviour
     public void HealthChange(int currentHealth)
     {
         if (currentHealth > 0)
-            healthDie.sprite = healthDice[currentHealth - 1];
+            healthDie.SetText(currentHealth.ToString());
     }
 
     public void RotateBarrel(int currentShot)

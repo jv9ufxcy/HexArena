@@ -2,5 +2,5 @@
 
 internal interface IHittable
 {
-    void Hit(int dam,int effect, UnityEngine.Vector2 dir);
+    void Hit(int dam,int effect,int bounceLvl, UnityEngine.Vector2 dir);
 }
