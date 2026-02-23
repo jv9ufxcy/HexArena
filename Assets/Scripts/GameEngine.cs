@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
@@ -8,6 +9,10 @@ using DG.Tweening;
 
 public class GameEngine : MonoBehaviour
 {
+    public class OnTickEventArgs : EventArgs
+    {
+        public int tick;
+    }
     public static float hitStop;
 
     public static GameEngine gameEngine;
@@ -19,6 +24,11 @@ public class GameEngine : MonoBehaviour
     public GameObject[] globalPrefabs;
 
     public Transform DamagePopup;
+
+    private int tick;
+    private float tickTimer;
+    private const float tickTimerMax = 1f;
+    public static event EventHandler<OnTickEventArgs> OnTick;
     
     // Use this for initialization
     void Awake ()
@@ -38,6 +48,19 @@ public class GameEngine : MonoBehaviour
         if (hitStop>0)
         {
             hitStop--;
+        }
+        else
+        {
+            tickTimer += Time.fixedDeltaTime;
+            if (tickTimer>=tickTimerMax)
+            {
+                tickTimer -= tickTimerMax;
+                tick++;
+                if (OnTick != null)
+                {
+                    OnTick(this, new OnTickEventArgs { tick = tick });
+                }
+            }
         }
 	}
     public static void GlobalPrefab(int _index, GameObject _parentObj)

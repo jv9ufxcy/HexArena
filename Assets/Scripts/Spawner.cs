@@ -40,7 +40,7 @@ public class Spawner : MonoBehaviour
     [SerializeField] private GameObject bombPrefab;
     public static ObjectPool<PoolObject> bombPool;
     //Sophie Spawner
-    [SerializeField] private float timeToWaitBetweenWaves = 8;
+    [SerializeField] private float waveStartDelay = 1;
     [SerializeField] private List<Wave> waves = new List<Wave>();
     [SerializeField] private List<Transform> possibleSpawnPoints = new List<Transform>();
 
@@ -58,7 +58,7 @@ public class Spawner : MonoBehaviour
     private void Start()
     {
         //GenerateWave();
-        
+        possibleSpawnPoints = new List<Transform>(GetComponentsInChildren<Transform>());
     }
     private void OnTriggerEnter2D(Collider2D collision)
     {
@@ -67,7 +67,7 @@ public class Spawner : MonoBehaviour
             if (battleState == spawnState.Idle)
             {
                 canSpawn = true;
-                waveTimer = waveDuration;
+                waveTimer = waveStartDelay;
                 StartCoroutine(StartWaves());
                 battleState = spawnState.Active;
             }
@@ -94,9 +94,9 @@ public class Spawner : MonoBehaviour
             }
             else
             {
-                int random = UnityEngine.Random.Range(0, 4);
-                Vector3 position = UnityEngine.Random.insideUnitSphere * range + this.transform.position;
-                SummonEnemy(random,position);
+                //int random = UnityEngine.Random.Range(0, 4);
+                //Vector3 position = GetRandomTransform().position;
+                //SummonEnemy(random,position);
                 waveTimer = waveDuration;
             }
         }
@@ -129,7 +129,7 @@ public class Spawner : MonoBehaviour
     }
     IEnumerator StartWaves()
     {
-        yield return new WaitForSeconds(timeToWaitBetweenWaves);
+        yield return new WaitForSeconds(waveStartDelay);
         //bState = battleState.active;
         for (int b = 0; b < waves.Count; b++)
         {

@@ -11,7 +11,7 @@ public class Enemy : MonoBehaviour,IHittable
 {
     private Rigidbody2D rb;
 
-    [SerializeField]private Transform player;
+    [SerializeField]private Transform player, playerTarget;
 
     [SerializeField] private SpriteRenderer spriteRend;
     [SerializeField] private Sprite defaultSprite, frozenSprite, frogSprite;
@@ -104,6 +104,7 @@ public class Enemy : MonoBehaviour,IHittable
     public void Activate()
     {
         this.player = GameEngine.gameEngine.mainCharacter.transform;
+        this.playerTarget = GameEngine.gameEngine.mainCharacter.orbitTarget;
         active = true;
     }
 
@@ -138,6 +139,7 @@ public class Enemy : MonoBehaviour,IHittable
         switch (effect)
         {
             case 0://Wound self damages instantly
+                GameEngine.gameEngine.mainCharacter.DoHeal(128);
                 break;
             case 1://Skewer damages on contact
                 break;
@@ -151,6 +153,8 @@ public class Enemy : MonoBehaviour,IHittable
                 ApplyFrost();
                 break;
             case 5://Explosion knockback
+                break;
+            case 6:
                 break;
         }
     }
@@ -287,10 +291,11 @@ public class Enemy : MonoBehaviour,IHittable
     }
     private void HealthChance()
     {
-        float healthOverMax = 1 - GameEngine.gameEngine.mainCharacter.CurHealth / 12f;
+        Player playerChar = GameEngine.gameEngine.mainCharacter;
+        float healthOverMax = 1 - playerChar.CurHealth / playerChar.MaxHealth;
         int dropRate = Mathf.RoundToInt(healthOverMax * 100);
         int randomChance = UnityEngine.Random.Range(0,100);
-        if (randomChance>=dropRate)
+        if (randomChance<=dropRate)
         {
             GameEngine.GlobalPrefab(6, this.gameObject);
         }
@@ -330,6 +335,10 @@ public class Enemy : MonoBehaviour,IHittable
             case AttackingState.standby:
                 //anticipation Pose
                 AnticipationFlash();
+                //Get Actual plaier DIR
+                Vector2 target = player.transform.position;
+                direction = new Vector2(target.x - transform.position.x, target.y - transform.position.y).normalized;
+                //Attack Startup
                 shotTimer = startTimeBtwShots;
                 attackState = AttackingState.attack;
                 break;
@@ -435,11 +444,11 @@ public class Enemy : MonoBehaviour,IHittable
     [SerializeField]private float actionCooldown = 3;
     private void Movement()
     {
-        float distanceFromPlayer = Vector2.Distance(player.position, transform.position);
+        float distanceFromPlayer = Vector2.Distance(playerTarget.position, transform.position);
 
         if (distanceFromPlayer > stoppingDistance)//follow Player
         {
-            Vector2 target = player.transform.position;
+            Vector2 target = playerTarget.transform.position;
             direction = new Vector2(target.x - transform.position.x, target.y - transform.position.y).normalized;
             rb.velocity = direction * speed;
         }
@@ -554,7 +563,7 @@ public class Enemy : MonoBehaviour,IHittable
     }
     private void FireArrow(float bulletResource, float numberOfBullets, float speed)
     {
-        var other = GameEngine.gameEngine.mainCharacter;
+        var other = GameEngine.gameEngine.mainCharacter.transform;
         Vector3 dir = other.transform.position - transform.position;
         dir = other.transform.InverseTransformDirection(dir);
         float angle = Mathf.Round(Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg);

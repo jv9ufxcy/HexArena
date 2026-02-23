@@ -17,12 +17,15 @@ public class Player : MonoBehaviour,IHittable
     private int curHealth;
 
     [Header("Movement")]
+    private Vector2 velocity = new Vector2();
     [SerializeField] private float moveSpeed;
     [SerializeField] private float frogSpeed = 0.375f;
     Vector2 moveAxis,lookAxis;
     [SerializeField] private PlayerControls controls;
     private InputAction move, aim, fire;
-    [SerializeField]private bool lockRotation = false;
+    [SerializeField] private bool lockRotation = false;
+    public Transform orbitTarget;
+    [SerializeField] private float orbFreq = 1f, orbAmp=.25f;
 
     [Header("Shooting")]
     [SerializeField] GameObject[] bullets;
@@ -59,7 +62,7 @@ public class Player : MonoBehaviour,IHittable
         rb.gravityScale = 0;
         rb.freezeRotation = true;
         uiScript.AmmoUpdate(gunChamber);
-        curHealth = maxHealth;
+        curHealth = MaxHealth;
         controls = new PlayerControls();
         trajectoryLine=GetComponentInChildren<LineRenderer>();
     }
@@ -123,6 +126,57 @@ public class Player : MonoBehaviour,IHittable
             }
         }
     }
+    private void FixedUpdate()
+    {
+        if (GameEngine.hitStop <= 0)
+        {
+            switch (state)
+            {
+                case PlayerState.neutral:
+                    rb.velocity = moveAxis.normalized * moveSpeed;
+                    break;
+                case PlayerState.frozen:
+                    if (stunTimer > 0)
+                    {
+                        stunTimer -= Time.fixedDeltaTime;
+                        rb.velocity = Vector2.zero;
+                    }
+                    else
+                        DeSpell();
+                    break;
+                case PlayerState.frog:
+                    if (stunTimer > 0)
+                    {
+                        rb.velocity = moveAxis.normalized * frogSpeed;
+                        //Vector3 destination = transform.position + (Vector3)moveAxis;
+                        //StartCoroutine(LeapFrog(destination));
+                        stunTimer -= Time.fixedDeltaTime;
+                    }
+                    else
+                        DeSpell();
+                    break;
+                case PlayerState.stunned:
+                    if (stunTimer > 0)
+                    {
+                        stunTimer -= Time.fixedDeltaTime;
+                    }
+                    else
+                        DeSpell();
+                    break;
+                default:
+                    break;
+            }
+            //rb.MovePosition(rb.position + moveAxis.normalized * moveSpeed * Time.fixedDeltaTime);
+            OrbitTarget();
+        }
+    }
+    private void OrbitTarget()
+    {
+        float x = Mathf.Cos(orbFreq * Time.time) * orbAmp*1.5f;
+        float y = Mathf.Sin(orbFreq * Time.time) * orbAmp;
+        float z = orbitTarget.transform.position.z;
+        orbitTarget.transform.position = new Vector3(x,y,z)+transform.position;
+    }
     private void LineRend2DReflections(Vector3 pos, Vector3 dir)
     {
         trajectoryLine.SetPosition(0, transform.position);
@@ -154,11 +208,20 @@ public class Player : MonoBehaviour,IHittable
             }
         }
     }
-    private static void Death()
+    private void Death()
     {
+        StartCoroutine(GameOver());
+    }
+    private IEnumerator GameOver()
+    {
+        stunTimer = 999f;
+        state = PlayerState.stunned;
+        GameEngine.SetHitPause(60);
+        rb.velocity = Vector3.zero;
+        audioManager.PlaySound(deathBark);
+        yield return new WaitForSeconds(2f);
         SceneManager.LoadScene(SceneManager.GetActiveScene().name);
     }
-
     public void Reload(int min,int max)
     {
         gunChamber.Clear();
@@ -250,67 +313,23 @@ public class Player : MonoBehaviour,IHittable
     public void DoHeal(int healthGain)
     {
         curHealth += healthGain;
-        curHealth = Mathf.Clamp(curHealth, 0, maxHealth);
+        curHealth = Mathf.Clamp(curHealth, 0, MaxHealth);
         uiScript.HealthChange((int)curHealth);
+        DamagePopup.Create(transform.position, healthGain, -1);
         StartCoroutine(FlashWhiteDamage(2));
     }    
     public void DoDamage(int damage)
     {
         spriteRend.transform.DOComplete();
         curHealth -= damage;
-        curHealth = Mathf.Clamp(curHealth, 0, maxHealth);
+        curHealth = Mathf.Clamp(curHealth, 0, MaxHealth);
         uiScript.HealthChange((int)curHealth);
         GameEngine.SetHitPause(15);
         stunTimer = .15f;
-        spriteRend.transform.DOShakePosition(0.125f, damage, 10, 120);
+        spriteRend.transform.DOShakePosition(0.125f, damage/16, 10, 120);
         StartCoroutine(FlashWhiteDamage(5));
         state = PlayerState.stunned;
     }
-
-    private void FixedUpdate()
-    {
-        if (GameEngine.hitStop <= 0)
-        {
-            switch (state)
-            {
-                case PlayerState.neutral:
-                    rb.velocity = moveAxis.normalized * moveSpeed;
-                    break;
-                case PlayerState.frozen:
-                    if (stunTimer > 0)
-                    {
-                        stunTimer -= Time.fixedDeltaTime;
-                        rb.velocity = Vector2.zero;
-                    }
-                    else
-                        DeSpell();
-                    break;
-                case PlayerState.frog:
-                    if (stunTimer > 0)
-                    {
-                        rb.velocity = moveAxis.normalized * frogSpeed;
-                        //Vector3 destination = transform.position + (Vector3)moveAxis;
-                        //StartCoroutine(LeapFrog(destination));
-                        stunTimer -= Time.fixedDeltaTime;
-                    }
-                    else
-                        DeSpell();
-                    break;
-                case PlayerState.stunned:
-                    if (stunTimer > 0)
-                    {
-                        stunTimer -= Time.fixedDeltaTime;
-                    }
-                    else
-                        DeSpell();
-                    break;
-                default:
-                    break;
-            }
-            //rb.MovePosition(rb.position + moveAxis.normalized * moveSpeed * Time.fixedDeltaTime);
-        }
-    }
-
     private IEnumerator LeapFrog(Vector3 destination)
     {
         Vector3 startPos = transform.position;
@@ -343,6 +362,7 @@ public class Player : MonoBehaviour,IHittable
         switch (effect)
         {
             case 0://Wound self damages instantly
+                
                 break;
             case 1://Skewer damages on contact
                 break;
@@ -363,6 +383,7 @@ public class Player : MonoBehaviour,IHittable
     private List<GameObject> guardiansCreated= new List<GameObject>();
 
     public int CurHealth { get => curHealth; set => curHealth = value; }
+    public int MaxHealth { get => maxHealth; set => maxHealth = value; }
 
     void ApplyGuardians(int numOfGuardians)
     {

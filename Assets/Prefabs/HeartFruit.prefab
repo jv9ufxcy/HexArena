@@ -176,7 +176,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 267896989e742ff418e72269b23dc115, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  healAmt: 3
+  healAmt: 60
   spriteVisual: {fileID: 3061585135322104886}
 --- !u!61 &-5408856583753109151
 BoxCollider2D:

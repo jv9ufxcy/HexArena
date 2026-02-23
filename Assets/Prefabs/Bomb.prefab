@@ -197,7 +197,7 @@ Transform:
   m_GameObject: {fileID: 9027985601025475168}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 4, y: 2.5, z: 0}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -219,6 +219,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   player: {fileID: 0}
+  playerTarget: {fileID: 0}
   spriteRend: {fileID: 8220074097068119371}
   defaultSprite: {fileID: 0}
   frozenSprite: {fileID: 21300000, guid: 103b1ce3c646a30459d8a068777f89d0, type: 3}
@@ -226,8 +227,8 @@ MonoBehaviour:
   defaultMat: {fileID: 0}
   flashMat: {fileID: 2100000, guid: 7827467bf931b0949a9c91885d4c723c, type: 2}
   active: 1
-  maxHealth: 3
-  speed: 3
+  maxHealth: 192
+  speed: 6
   stoppingDistance: 2
   retreatDistance: 7
   projectileObject: {fileID: 6514229213537963326, guid: d6a5c974d135f684d94956d7a12971c4, type: 3}
@@ -243,6 +244,7 @@ MonoBehaviour:
   ghostBark: Ghost
   eState: 0
   eType: 3
+  parent: {fileID: 0}
   shakeDuration: 1
   shakeStrength: 0.5
   blinkDuration: 2
@@ -255,7 +257,6 @@ MonoBehaviour:
   aniMoveSpeed: 0
   yAmp: 0.1
   yFrq: 24
-  numOfGuardians: 1
   magicObjects:
   - {fileID: 4987860436710678086, guid: 2d4bd9eb21cabc44f84f368bfc4d6990, type: 3}
   - {fileID: 7660177252830840477, guid: b6a07e07b204b064d90a2c402e059666, type: 3}

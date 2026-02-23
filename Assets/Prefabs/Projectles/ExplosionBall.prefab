@@ -251,11 +251,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   velocity: {x: 0, y: 0}
-  damage: 1
+  damage: 64
   speed: 8
   rotation: 0
   canHitSelf: 0
   lifetime: 2
   owner: {fileID: 0}
   projectileIndex: 0
+  bounceLvl: 0
   tagToHit: Player

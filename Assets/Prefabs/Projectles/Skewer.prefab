@@ -105,7 +105,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   speed: 16
   bounceForce: 0.8
-  damage: 1
+  damage: 64
+  bouncePower: 1
   lifeTime: 3
   punchScaleDur: 0.125
   punchScale: {x: 1.125, y: 1.125, z: 1}

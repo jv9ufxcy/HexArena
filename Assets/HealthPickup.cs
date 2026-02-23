@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class HealthPickup : MonoBehaviour
 {
-    [SerializeField] private int healAmt = 3;
+    [SerializeField] private int healAmt = 60;
     [SerializeField] private Transform spriteVisual;
 
     // Update is called once per frame
@@ -16,7 +16,7 @@ public class HealthPickup : MonoBehaviour
     {
         if (collision.CompareTag("Player"))
         {
-            collision.GetComponent<Player>().DoHeal(3);
+            collision.GetComponent<Player>().DoHeal(healAmt);
             Destroy(gameObject);
         }
     }

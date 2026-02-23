@@ -26,7 +26,12 @@ public class DamagePopup : MonoBehaviour
     public void Setup(int damAmt, int bounce)
     {
         textMesh.SetText(damAmt.ToString());
-        if (bounce<=1)
+        if (bounce<0)
+        {
+            textMesh.fontSize = 8;
+            textColor = Color.green;
+        }
+        if (bounce < 2 && bounce >= 0)
         {
             textMesh.fontSize = 8;
             textColor = textMesh.color;
