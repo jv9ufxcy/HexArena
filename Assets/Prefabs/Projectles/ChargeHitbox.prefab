@@ -112,7 +112,9 @@ MonoBehaviour:
   canHitSelf: 1
   hitSound: Bullet
   reflectSound: Reflect
-  bulletParticle: 4
+  bulletEffect: 2
+  superBulletEffect: 2
+  ultraBulletEffect: 2
   spellEffect: 0
 --- !u!50 &5122179293473881041
 Rigidbody2D:

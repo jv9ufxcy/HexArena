@@ -22,7 +22,7 @@ public class Player : MonoBehaviour,IHittable
     [SerializeField] private float frogSpeed = 0.375f;
     Vector2 moveAxis,lookAxis;
     [SerializeField] private PlayerControls controls;
-    private InputAction move, aim, fire;
+    private InputAction move, aim, fire, look;
     [SerializeField] private bool lockRotation = false;
     public Transform orbitTarget;
     [SerializeField] private float orbFreq = 1f, orbAmp=.25f;
@@ -39,12 +39,13 @@ public class Player : MonoBehaviour,IHittable
     [SerializeField] private LayerMask target;
     [Header("Ammo")]
     [Range(0, 5)]
-    public List<int> gunChamber = new List<int> { 1, 2, 3, 4, 5, 0 };
+    public List<int> gunChamber = new List<int> { 5, 1, 1, 1, 3, 3 };
+    [SerializeField] private int[] ammo = new int[] { 0, 1, 1, 1, 1, 1, 1, 3, 3, 3, 5, 5 };
     [SerializeField] private UIManager uiScript;
     [Header("Spell Effects")]
     private float stunTimer, guardianTimer;
     [SerializeField] private GameObject[] magicObjects;
-    private enum PlayerState { neutral, frozen,frog,stunned}
+    private enum PlayerState { neutral, frozen,frog,stunned,dead}
     [SerializeField]private PlayerState state;
     [Header("SoundEffects")]
     [SerializeField] private AudioManager audioManager;
@@ -70,6 +71,8 @@ public class Player : MonoBehaviour,IHittable
     {
         move = controls.Player.Move;
         move.Enable();
+        look = controls.Player.Look;
+        look.Enable();
 
         fire = controls.Player.Fire;
         fire.Enable();
@@ -83,6 +86,7 @@ public class Player : MonoBehaviour,IHittable
     private void OnDisable()
     {
         move.Disable();
+        look.Disable();
         fire.Disable();
         aim.Disable();
     }
@@ -97,7 +101,7 @@ public class Player : MonoBehaviour,IHittable
     {
         if (GameEngine.hitStop <= 0)
         {
-            if (curHealth <= 0)
+            if (curHealth <= 0&&state!=PlayerState.dead)
                 Death();
             if (guardianTimer > 0)
             {
@@ -114,10 +118,27 @@ public class Player : MonoBehaviour,IHittable
                     guardiansCreated.Clear();
                 }
             }
-            moveAxis = move.ReadValue<Vector2>();
-            if (moveAxis != Vector2.zero && state == PlayerState.neutral&&!lockRotation)
+            
+                moveAxis = move.ReadValue<Vector2>();
+                lookAxis = look.ReadValue<Vector2>();
+            if (state == PlayerState.neutral && !lockRotation)
             {
-                RotateWeapon();
+                if (look.ReadValue<Vector2>() == Vector2.zero)
+                {
+                    if (moveAxis != Vector2.zero)
+                    { 
+                        RotateWeapon(CardinalDir(moveAxis));
+                        FacingDir(moveAxis); 
+                    }
+                }
+                else
+                {
+                    if (lookAxis != Vector2.zero)
+                    { 
+                        RotateWeapon(CardinalDir(lookAxis));
+                        FacingDir(lookAxis);
+                    }
+                }
             }
             UpdateAnimator();
             if (lockRotation)
@@ -133,13 +154,14 @@ public class Player : MonoBehaviour,IHittable
             switch (state)
             {
                 case PlayerState.neutral:
-                    rb.velocity = moveAxis.normalized * moveSpeed;
+                    if (move.ReadValue<Vector2>() != Vector2.zero)
+                        velocity = CardinalDir(moveAxis.normalized) * moveSpeed;
                     break;
                 case PlayerState.frozen:
                     if (stunTimer > 0)
                     {
                         stunTimer -= Time.fixedDeltaTime;
-                        rb.velocity = Vector2.zero;
+                        velocity = Vector2.zero;
                     }
                     else
                         DeSpell();
@@ -147,7 +169,8 @@ public class Player : MonoBehaviour,IHittable
                 case PlayerState.frog:
                     if (stunTimer > 0)
                     {
-                        rb.velocity = moveAxis.normalized * frogSpeed;
+                        if (move.ReadValue<Vector2>() != Vector2.zero)
+                            velocity = CardinalDir(moveAxis.normalized) * frogSpeed;
                         //Vector3 destination = transform.position + (Vector3)moveAxis;
                         //StartCoroutine(LeapFrog(destination));
                         stunTimer -= Time.fixedDeltaTime;
@@ -163,11 +186,15 @@ public class Player : MonoBehaviour,IHittable
                     else
                         DeSpell();
                     break;
+                case PlayerState.dead:
+                    velocity = Vector2.zero;
+                    break;
                 default:
                     break;
             }
             //rb.MovePosition(rb.position + moveAxis.normalized * moveSpeed * Time.fixedDeltaTime);
             OrbitTarget();
+            MoveVelocity();
         }
     }
     private void OrbitTarget()
@@ -208,6 +235,13 @@ public class Player : MonoBehaviour,IHittable
             }
         }
     }
+    private void MoveVelocity()
+    {
+        rb.velocity = velocity;
+        //rb.MovePosition(rb.position + velocity * Time.fixedDeltaTime);
+        //rb.MovePosition(rb.position + moveAxis.normalized * moveSpeed * Time.fixedDeltaTime);
+        velocity.Scale(new Vector3(0.5f,0.5f,0.5f));
+    }
     private void Death()
     {
         StartCoroutine(GameOver());
@@ -215,19 +249,20 @@ public class Player : MonoBehaviour,IHittable
     private IEnumerator GameOver()
     {
         stunTimer = 999f;
-        state = PlayerState.stunned;
+        state = PlayerState.dead;
         GameEngine.SetHitPause(60);
-        rb.velocity = Vector3.zero;
+        ScreenShake(3, 1f);
+        velocity = Vector3.zero;
         audioManager.PlaySound(deathBark);
         yield return new WaitForSeconds(2f);
         SceneManager.LoadScene(SceneManager.GetActiveScene().name);
     }
-    public void Reload(int min,int max)
+    public void Reload(int max, int[] bulletArray)
     {
         gunChamber.Clear();
-        for (int i = 0; i < 6; i++)
+        for (int i = 0; i < max; i++)
         {
-            int[] bulletArray = new int[]{ 0, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 4, 4, 4, 5, 5 };
+            ;
             gunChamber.Add(bulletArray[Random.Range(0, bulletArray.Length)]);
             uiScript.AmmoUpdate(gunChamber);
             currentBullet = 0;
@@ -235,31 +270,35 @@ public class Player : MonoBehaviour,IHittable
         gunObject.DOPunchRotation(new Vector3(0, 0, 361), .25f);
         PlaySound(reloadBark);
     }
-    private void RotateWeapon()
+    private void RotateWeapon(Vector2 rotAxis)
     {
-        lookAxis = new Vector2(Mathf.Sin(moveAxis.x), Mathf.Sin(moveAxis.y));
-        float angle = Mathf.Atan2(lookAxis.y, lookAxis.x) * Mathf.Rad2Deg;
+        //lookAxis = new Vector2(rotAxis.x, rotAxis.y);
+        float angle = Mathf.Atan2(rotAxis.y, rotAxis.x) * Mathf.Rad2Deg;
         Quaternion newRot = Quaternion.Euler(0, 0, angle - 90f);
         weaponOffset.rotation = Quaternion.Slerp(transform.rotation, newRot, rotSpeed);
     }
 
     void UpdateAnimator()
     {
-        Vector2 latSpeed = rb.velocity;
+        Vector2 latSpeed = velocity;
         aniMoveSpeed = Vector3.SqrMagnitude(latSpeed);
-        if (aniMoveSpeed>0)
+        if (aniMoveSpeed > 0)
         {
             float yPos = Mathf.Sin(Time.time * yFrq) * yAmp;
             spriteRend.gameObject.transform.localPosition = new Vector3(0, yPos, 0);
         }
         else
             spriteRend.gameObject.transform.localPosition = Vector3.zero;
-
-        var direction = Mathf.Sign(lookAxis.x);
-        spriteRend.transform.localScale = new Vector3(direction, 1f, 1f);
+        
         //gunObject.transform.localScale = new Vector3(direction, direction, 1f);
 
     }
+
+    private void FacingDir(Vector2 dir)
+    {
+        spriteRend.transform.localScale = new Vector3(Mathf.Sign(CardinalDir(dir).x), 1f, 1f);
+    }
+
     private int currentBullet;
     private void Aim(InputAction.CallbackContext context)
     {
@@ -283,7 +322,8 @@ public class Player : MonoBehaviour,IHittable
             {
                 if (gunChamber.Count == 0)//reload
                 {
-                    Reload(0, 6);
+                    //int[] bulletArray = new int[] { 0, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 4, 4, 4, 5, 5 };
+                    Reload(6,ammo);
                 }
                 else//fire
                 {
@@ -299,13 +339,13 @@ public class Player : MonoBehaviour,IHittable
                     Vector3 punchScale = new Vector3(1.025f, 1.025f, 1);
                     gunObject.transform.DOPunchScale(punchScale, .25f,2,.125f);
                     //set bulletDirection
-                    proj.GetComponent<Projectile>().ChangeDirection(lookAxis);
+                    proj.GetComponent<Projectile>().ChangeDirection(CardinalDir(lookAxis));
                     proj.GetComponent<Projectile>().ChangeOwner(this.gameObject);
 
                     uiScript.AmmoUpdate(gunChamber);
                     currentBullet++;
-
                     PlaySound(fireBark);
+                    ScreenShake(1.5f, .25f);
                 }
             }
         }
@@ -326,7 +366,8 @@ public class Player : MonoBehaviour,IHittable
         uiScript.HealthChange((int)curHealth);
         GameEngine.SetHitPause(15);
         stunTimer = .15f;
-        spriteRend.transform.DOShakePosition(0.125f, damage/16, 10, 120);
+        spriteRend.transform.DOShakePosition(0.125f, 1, 10, 120);
+        ScreenShake(2,.5f);
         StartCoroutine(FlashWhiteDamage(5));
         state = PlayerState.stunned;
     }
@@ -351,7 +392,7 @@ public class Player : MonoBehaviour,IHittable
         if (dam>0)
         {
             DoDamage(dam);
-            rb.velocity = dir * 8;
+            velocity = dir * 8;
             PlaySound(hurtBark);
         }
         SpellEffect(effect, bounceLvl);
@@ -429,11 +470,25 @@ public class Player : MonoBehaviour,IHittable
         }
         spriteRend.material = defaultMat;
     }
+    void ScreenShake(float amp, float time)
+    {
+        GameEngine.gameEngine.ShakeCamera(amp, time);
+    }
     private void PlaySound(string sound)
     {
         if (sound != null)
         {
             audioManager.PlaySound(sound);
         }
+    }
+    public static Vector2 CardinalDir(Vector2 vector)
+    {
+        float angle = Mathf.Atan2(vector.y, vector.x);
+        float hypotenuse = Mathf.Sqrt(vector.x * vector.x) + (vector.y * vector.y);
+        float rad = Mathf.Deg2Rad*45;
+        float snap = Mathf.Round(angle / rad) * rad;
+        //int octant = Mathf.RoundToInt(45 * angle / (2 * Mathf.PI) + 45) % 45;
+            Vector2 snappedVector = new Vector2(Mathf.Cos(snap)*hypotenuse,Mathf.Sin(snap)*hypotenuse);
+        return snappedVector;
     }
 }

@@ -85,7 +85,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   damageOverTime: 32
   spellEffectIndex: 4
-  lifeTime: 1
+  lifeTime: 3
   scrollSpeed: {x: 2, y: 0}
   currentPos: {x: 0, y: 0}
 --- !u!198 &2382868974139703809

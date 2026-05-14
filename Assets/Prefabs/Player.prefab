@@ -105,6 +105,7 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 64
   gunChamber: 010000000200000003000000040000000500000000000000
+  ammo: 000000000100000001000000010000000100000001000000010000000300000003000000030000000500000005000000
   uiScript: {fileID: 0}
   magicObjects:
   - {fileID: 4987860436710678086, guid: 2d4bd9eb21cabc44f84f368bfc4d6990, type: 3}
@@ -282,6 +283,7 @@ GameObject:
   m_Component:
   - component: {fileID: 319016808491621418}
   - component: {fileID: 548074741418607598}
+  - component: {fileID: 7577470228283218740}
   m_Layer: 8
   m_Name: Sprite
   m_TagString: Untagged
@@ -325,7 +327,7 @@ SpriteRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 10754, guid: 0000000000000000f000000000000000, type: 0}
+  - {fileID: 2100000, guid: 6fe4e03586ec0a54ab20fc0c5b9a7771, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -343,8 +345,8 @@ SpriteRenderer:
   m_AutoUVMaxDistance: 0.5
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
-  m_SortingLayerID: 0
-  m_SortingLayer: 0
+  m_SortingLayerID: -649870589
+  m_SortingLayer: 1
   m_SortingOrder: 0
   m_Sprite: {fileID: -429080072, guid: ba1bb9bc59d04ef4abd9df9156571f4d, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
@@ -357,6 +359,18 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
+--- !u!114 &7577470228283218740
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3929063917893367797}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e8daead0922c7524d8a510e76ba5cf2a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &4684495307737502583
 GameObject:
   m_ObjectHideFlags: 0
@@ -618,7 +632,7 @@ SpriteRenderer:
   m_LightmapParameters: {fileID: 0}
   m_SortingLayerID: -1694877739
   m_SortingLayer: -2
-  m_SortingOrder: 0
+  m_SortingOrder: -1
   m_Sprite: {fileID: 1602340196, guid: c3af85b3345af6143a4427b6569cff10, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0

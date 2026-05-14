@@ -72,7 +72,7 @@ SpriteRenderer:
   m_LightmapParameters: {fileID: 0}
   m_SortingLayerID: -1694877739
   m_SortingLayer: -2
-  m_SortingOrder: 0
+  m_SortingOrder: -1
   m_Sprite: {fileID: -2090686457, guid: c3af85b3345af6143a4427b6569cff10, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
@@ -233,7 +233,7 @@ MonoBehaviour:
   retreatDistance: 7
   projectileObject: {fileID: 6514229213537963326, guid: 3a3e1450e248e09419e3e0b4f7d77963, type: 3}
   projectileFirePoint: {fileID: 5687325331711016646}
-  startTimeBtwShots: 1
+  startTimeBtwShots: 0.5
   audioManager: {fileID: 0}
   readyBark: Ready
   attackBark: Attack

@@ -16,12 +16,17 @@ public class GameEngine : MonoBehaviour
     public static float hitStop;
 
     public static GameEngine gameEngine;
-
-    public float deadZone = 0.2f;
-
+    [Header("Timer")]
+    [SerializeField] private float remainingTime = 15f;
+    private float elapsedTime = 0f;
+    private bool countDown = false;
+    [SerializeField] TextMeshPro timerText;
+    private Color timerColor;
+    [Header("GameObjects")]
     public Player mainCharacter;
 
     public GameObject[] globalPrefabs;
+    public GameObject mobileHUD;
 
     public Transform DamagePopup;
 
@@ -29,11 +34,24 @@ public class GameEngine : MonoBehaviour
     private float tickTimer;
     private const float tickTimerMax = 1f;
     public static event EventHandler<OnTickEventArgs> OnTick;
-    
+    private CinemachineShake cineShake;
     // Use this for initialization
     void Awake ()
     {
         gameEngine = this;
+    }
+    private void Start()
+    {
+        mobileHUD.SetActive(Application.isMobilePlatform);
+        cineShake = Camera.main.GetComponent<CinemachineShake>();
+        timerColor = timerText.color;
+        timerText.gameObject.SetActive(false);
+        //SetRemainingTime(15);
+    }
+
+    public void ShakeCamera(float _pow, float _time)
+    {
+        cineShake.ShakeCamera(_pow, _time);
     }
     public static void SetHitPause(float _pow)
     {
@@ -42,8 +60,53 @@ public class GameEngine : MonoBehaviour
             hitStop = _pow;
         }
     }
-	// Update is called once per frame
-	void FixedUpdate ()
+    // Update is called once per frame
+    private void Update()
+    {
+        if (hitStop<=0)
+        {
+            if (countDown) CountdownTimer();
+        }
+    }
+
+    private void ElapsedTimer()
+    {
+        elapsedTime += Time.deltaTime;
+        int minutes = Mathf.FloorToInt(elapsedTime / 60);
+        int seconds = Mathf.FloorToInt(elapsedTime % 60);
+        SetTimerText(minutes, seconds);
+    }
+    private void CountdownTimer()
+    {
+        if (remainingTime > 0)
+            remainingTime -= Time.deltaTime;
+        else if (remainingTime < 0)
+        {
+            remainingTime = 0;
+            timerText.color = Color.red;
+            Debug.Log("TIME OVER");
+        }
+        int minutes = Mathf.FloorToInt(remainingTime / 60);
+        int seconds = Mathf.FloorToInt(remainingTime % 60);
+        SetTimerText(minutes, seconds);
+    }
+    public void SetRemainingTime(float seconds)
+    {
+        timerText.gameObject.SetActive(true);
+        timerText.color = timerColor;
+        remainingTime = seconds;
+        countDown = true;
+    }
+    public void AddTime(float seconds)
+    {
+        remainingTime += seconds;
+    }
+    private void SetTimerText(int minutes, int seconds)
+    {
+        timerText.SetText(string.Format("{0:00}:{1:00}", minutes, seconds));
+    }
+
+    void FixedUpdate ()
     {
         if (hitStop>0)
         {

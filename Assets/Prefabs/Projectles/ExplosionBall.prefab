@@ -257,6 +257,6 @@ MonoBehaviour:
   canHitSelf: 0
   lifetime: 2
   owner: {fileID: 0}
-  projectileIndex: 0
+  projectileIndex: 5
   bounceLvl: 0
   tagToHit: Player

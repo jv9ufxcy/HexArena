@@ -23,7 +23,8 @@ public class Enemy : MonoBehaviour,IHittable
     [SerializeField]
     private float maxHealth;
     private float health;
-
+    [Header("Movement")]
+    private Vector2 velocity = new Vector2();
     [SerializeField]
     private float speed;
     [SerializeField]
@@ -115,7 +116,7 @@ public class Enemy : MonoBehaviour,IHittable
         
         PlaySound(hurtBark);
         
-        spriteRend.transform.DOShakePosition(0.125f, damage, 7, 120);
+        spriteRend.transform.DOShakePosition(0.125f, 1, 7, 120);
         StartCoroutine(FlashWhiteDamage(5));
         GameEngine.SetHitPause(4);
         
@@ -129,7 +130,7 @@ public class Enemy : MonoBehaviour,IHittable
         {
             DeSpell();
             DoDamage(dam);
-            rb.velocity = dir * 8;
+            velocity = dir * 8;
         }
         SpellEffect(effect, bounceLvl);
         DamagePopup.Create(transform.position, dam, bounceLvl);
@@ -169,7 +170,7 @@ public class Enemy : MonoBehaviour,IHittable
         {
             CheckDeath();
             CooldownTimers();
-
+            
             switch (eState)
             {
                 case EnemyState.neutral:
@@ -200,13 +201,13 @@ public class Enemy : MonoBehaviour,IHittable
                     }
                     break;
                 case EnemyState.frozen:
-                    rb.velocity = Vector2.zero;
+                    velocity = Vector2.zero;
                     break;
                 case EnemyState.frog:
-                    rb.velocity = Vector2.zero;
+                    velocity = Vector2.zero;
                     break;
                 case EnemyState.stunned:
-                    rb.velocity = Vector2.zero;
+                    velocity = Vector2.zero;
                     if (stunTimer > 0)
                     {
                         stunTimer -= Time.deltaTime;
@@ -219,7 +220,13 @@ public class Enemy : MonoBehaviour,IHittable
             }
         }
     }
-
+    private void FixedUpdate()
+    {
+        if (GameEngine.hitStop<=0)
+        {
+            MoveVelocity();
+        }
+    }
     private void CooldownTimers()
     {
         if (cooldownTimer > 0)
@@ -279,7 +286,7 @@ public class Enemy : MonoBehaviour,IHittable
         StartCoroutine(BlinkColor(blinkDur));//blink for 5 frames
         yield return new WaitForSeconds(shakeDur);
         //explode now
-        ShakeCamera(1, .25f);
+        ScreenShake(1.5f, .25f);
         GameEngine.GlobalPrefab(0, this.gameObject);
         HealthChance();
         if (eType == EnemyType.bomber)
@@ -289,12 +296,14 @@ public class Enemy : MonoBehaviour,IHittable
         }
         gameObject.SetActive(false);
     }
+    int baseHPDropChance = 8;
     private void HealthChance()
     {
         Player playerChar = GameEngine.gameEngine.mainCharacter;
-        float healthOverMax = 1 - playerChar.CurHealth / playerChar.MaxHealth;
-        int dropRate = Mathf.RoundToInt(healthOverMax * 100);
+        float healthOverMax = playerChar.MaxHealth / Mathf.Clamp(playerChar.CurHealth, baseHPDropChance, playerChar.MaxHealth);
+        int dropRate = Mathf.RoundToInt(baseHPDropChance * healthOverMax);
         int randomChance = UnityEngine.Random.Range(0,100);
+        Debug.Log("DropRate: "+dropRate+ "RandomChance: "+randomChance);
         if (randomChance<=dropRate)
         {
             GameEngine.GlobalPrefab(6, this.gameObject);
@@ -321,13 +330,10 @@ public class Enemy : MonoBehaviour,IHittable
     {
         spriteRend.transform.DOShakePosition(dur, str, vib, rand, false, true);
     }
-    private static void ShakeCamera(float amplitude, float time)
-    {
-        CinemachineShake.instance.ShakeCamera(amplitude, time);
-    }
+
     private enum AttackingState { standby,attack, recover,}
     [SerializeField]private AttackingState attackState;
-    [SerializeField] private int numOfAttacks = 1, chargeSpeed = 24;
+    [SerializeField] private int numOfAttacks = 1, chargeSpeed = 24, curAtkNum=0;
     private void MeleeAttack()
     {
         switch (attackState)
@@ -335,15 +341,15 @@ public class Enemy : MonoBehaviour,IHittable
             case AttackingState.standby:
                 //anticipation Pose
                 AnticipationFlash();
-                //Get Actual plaier DIR
-                Vector2 target = player.transform.position;
-                direction = new Vector2(target.x - transform.position.x, target.y - transform.position.y).normalized;
+                //Get Actual player DIR
+                GetDirectionOfPlayer();
                 //Attack Startup
+                curAtkNum = 0;
                 shotTimer = startTimeBtwShots;
                 attackState = AttackingState.attack;
                 break;
             case AttackingState.attack:
-                for (int i = 0; i < numOfAttacks; i++)
+                if (curAtkNum < numOfAttacks)
                 {
                     if (shotTimer <= 0)
                     {
@@ -356,10 +362,16 @@ public class Enemy : MonoBehaviour,IHittable
                         //bulletFX
                         Vector3 punchScale = new Vector3(1.125f, 1.125f, 1);
                         //hit.transform.DOPunchScale(punchScale, .125f);
-                        //cooldown
-                        cooldownTimer = actionCooldown;
-                        attackState = AttackingState.recover;
+                        curAtkNum++;
+                        GetDirectionOfPlayer();
+                        shotTimer = startTimeBtwShots;
                     }
+                }
+                else
+                { 
+                    //cooldown
+                    cooldownTimer = actionCooldown;
+                    attackState = AttackingState.recover;
                 }
                 break;
             case AttackingState.recover:
@@ -373,6 +385,13 @@ public class Enemy : MonoBehaviour,IHittable
                 break;
         }
     }
+
+    private void GetDirectionOfPlayer()
+    {
+        Vector2 target = player.transform.position;
+        direction = new Vector2(target.x - transform.position.x, target.y - transform.position.y).normalized;
+    }
+
     private void ChargeAttack()
     {
         switch (attackState)
@@ -380,22 +399,34 @@ public class Enemy : MonoBehaviour,IHittable
             case AttackingState.standby:
                 //anticipation Pose
                 AnticipationFlash();
+                //Get Actual player DIR
+                GetDirectionOfPlayer();
+                curAtkNum = 0;
                 shotTimer = startTimeBtwShots;
                 attackState = AttackingState.attack;
                 break;
             case AttackingState.attack:
-                if (shotTimer <= 0)
+                if (curAtkNum < numOfAttacks)
                 {
-                    //punchy forward
-                    AttackAnim();
-                    rb.velocity = direction * chargeSpeed;
-                    //spawn hitbox
-                    GameObject hit = Instantiate(projectileObject, transform.position + (Vector3)direction.normalized, projectileFirePoint.rotation,this.transform);
-                    hit.GetComponent<Projectile>().ChangeDirection(direction);
-                    hit.GetComponent<Projectile>().ChangeOwner(this.gameObject);
-                    //bulletFX
-                    Vector3 punchScale = new Vector3(1.125f, 1.125f, 1);
-                    //hit.transform.DOPunchScale(punchScale, .125f);
+                    if (shotTimer <= 0)
+                    {
+                        //punchy forward
+                        AttackAnim();
+                        velocity = direction * chargeSpeed;
+                        //spawn hitbox
+                        GameObject hit = Instantiate(projectileObject, transform.position + (Vector3)direction.normalized, projectileFirePoint.rotation, this.transform);
+                        hit.GetComponent<Projectile>().ChangeDirection(direction);
+                        hit.GetComponent<Projectile>().ChangeOwner(this.gameObject);
+                        //bulletFX
+                        Vector3 punchScale = new Vector3(1.125f, 1.125f, 1);
+                        //hit.transform.DOPunchScale(punchScale, .125f);
+                        curAtkNum++;
+                        GetDirectionOfPlayer();
+                        shotTimer = startTimeBtwShots;
+                    }
+                }
+                else
+                {
                     //cooldown
                     cooldownTimer = actionCooldown;
                     attackState = AttackingState.recover;
@@ -404,7 +435,7 @@ public class Enemy : MonoBehaviour,IHittable
             case AttackingState.recover:
                 if (cooldownTimer <= 0)
                 {
-                    rb.velocity = Vector2.zero;
+                    velocity = Vector2.zero;
                     eState = EnemyState.neutral;
                     attackState = AttackingState.standby;
                 }
@@ -450,15 +481,19 @@ public class Enemy : MonoBehaviour,IHittable
         {
             Vector2 target = playerTarget.transform.position;
             direction = new Vector2(target.x - transform.position.x, target.y - transform.position.y).normalized;
-            rb.velocity = direction * speed;
+            velocity = direction * speed;
         }
         else//attack
         { 
-            rb.velocity = Vector2.zero;
+            velocity = Vector2.zero;
             eState = EnemyState.attacking;
         }
     }
-
+    private void MoveVelocity()
+    {
+        rb.MovePosition(rb.position + velocity * Time.fixedDeltaTime);
+        velocity.Scale(Vector3.one);
+    }
     private void FireBullet()
     {
         cooldownTimer = actionCooldown;
@@ -470,6 +505,7 @@ public class Enemy : MonoBehaviour,IHittable
                 proj.GetComponent<Projectile>().ChangeTarget(player.position, gameObject);
                 PlaySound(attackBark);
                 shotTimer = startTimeBtwShots;
+                ScreenShake(.5f, .25f);
             }
         }
     }
@@ -481,7 +517,7 @@ public class Enemy : MonoBehaviour,IHittable
         var direction = Mathf.Sign(player.transform.position.x-transform.position.x);
         spriteRend.transform.localScale = new Vector3(direction, 1f, 1f);
 
-        Vector2 latSpeed = rb.velocity;
+        Vector2 latSpeed = velocity;
         aniMoveSpeed = Vector3.SqrMagnitude(latSpeed);
         if (aniMoveSpeed > 0)
         {
@@ -538,6 +574,10 @@ public class Enemy : MonoBehaviour,IHittable
             yield return new WaitForFixedUpdate();
         }
         spriteRend.material = defaultMat;
+    }
+    void ScreenShake(float amp, float time)
+    {
+        GameEngine.gameEngine.ShakeCamera(amp, time);
     }
     float[] rotations;
     private void FireBulletWave(float bulletResource, float numberOfBullets, float speed, float velocityX, float velocityY, float minRot, float maxRot, float isRandom)

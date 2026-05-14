@@ -32,6 +32,8 @@ public class UIManager : MonoBehaviour
     {
         if (currentHealth > 0)
             healthDie.SetText(currentHealth.ToString());
+        else
+            healthDie.SetText("000");
     }
 
     public void RotateBarrel(int currentShot)

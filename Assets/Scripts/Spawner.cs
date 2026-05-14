@@ -39,6 +39,10 @@ public class Spawner : MonoBehaviour
     public static ObjectPool<PoolObject> boarPool;
     [SerializeField] private GameObject bombPrefab;
     public static ObjectPool<PoolObject> bombPool;
+    [SerializeField] private GameObject mantisPrefab;
+    public static ObjectPool<PoolObject> mantisPool;
+    [SerializeField] private GameObject knightPrefab;
+    public static ObjectPool<PoolObject> knightPool;
     //Sophie Spawner
     [SerializeField] private float waveStartDelay = 1;
     [SerializeField] private List<Wave> waves = new List<Wave>();
@@ -54,6 +58,8 @@ public class Spawner : MonoBehaviour
         shrumPool = new ObjectPool<PoolObject>(shrumPrefab, CallOnPull, CallOnPush);
         boarPool = new ObjectPool<PoolObject>(boarPrefab, CallOnPull, CallOnPush);
         bombPool = new ObjectPool<PoolObject>(bombPrefab, CallOnPull, CallOnPush);
+        mantisPool = new ObjectPool<PoolObject>(mantisPrefab, CallOnPull, CallOnPush);
+        knightPool = new ObjectPool<PoolObject>(knightPrefab, CallOnPull, CallOnPush);
     }
     private void Start()
     {
@@ -118,6 +124,12 @@ public class Spawner : MonoBehaviour
                 break;
             case 3:
                 enemy = bombPool.PullGameObject(pos);
+                break;
+            case 4:
+                enemy = mantisPool.PullGameObject(pos);
+                break;
+            case 5:
+                enemy = knightPool.PullGameObject(pos);
                 break;
             default:
                 break;
