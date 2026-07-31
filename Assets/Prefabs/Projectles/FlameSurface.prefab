@@ -84,7 +84,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a62f58b3d6de9414b81dd3338353c764, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  damageOverTime: 32
+  damageOverTime: 1
   spellEffectIndex: 5
   lifeTime: 6
   scrollSpeed: {x: 2, y: 0}

@@ -26,6 +26,7 @@ public class Surface : MonoBehaviour
         rend = GetComponentInChildren<SpriteRenderer>();
         material = rend.material;
         currentPos = material.mainTextureOffset;
+        transform.rotation=Quaternion.identity;
         //GameEngine.OnTick += delegate (object sender, GameEngine.OnTickEventArgs e)
     }
 

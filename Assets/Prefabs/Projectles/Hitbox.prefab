@@ -104,7 +104,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   speed: 0
   bounceForce: 0
-  damage: 60
+  damage: 1
   bouncePower: 1
   lifeTime: 0.35
   punchScaleDur: 0.25
@@ -112,7 +112,9 @@ MonoBehaviour:
   canHitSelf: 1
   hitSound: Bullet
   reflectSound: Reflect
-  bulletParticle: 4
+  bulletEffect: 2
+  superBulletEffect: 2
+  ultraBulletEffect: 2
   spellEffect: 0
 --- !u!50 &5122179293473881041
 Rigidbody2D:

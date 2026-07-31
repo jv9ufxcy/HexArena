@@ -140,7 +140,7 @@ public class Enemy : MonoBehaviour,IHittable
         switch (effect)
         {
             case 0://Wound self damages instantly
-                GameEngine.gameEngine.mainCharacter.DoHeal(128);
+                GameEngine.gameEngine.mainCharacter.DoHeal(1);
                 break;
             case 1://Skewer damages on contact
                 break;
@@ -296,7 +296,7 @@ public class Enemy : MonoBehaviour,IHittable
         }
         gameObject.SetActive(false);
     }
-    int baseHPDropChance = 8;
+    int baseHPDropChance = 1;
     private void HealthChance()
     {
         Player playerChar = GameEngine.gameEngine.mainCharacter;

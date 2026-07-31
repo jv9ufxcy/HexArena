@@ -62,6 +62,7 @@ public class ReloadPickup : MonoBehaviour, IHittable
         if (collision.CompareTag("Player") && !falling)
         {
             collision.GetComponent<Player>().Reload(numOfBullets, bulletArray);
+            collision.GetComponent<Player>().StartInvul(5f,15f);
             Destroy(gameObject);
         }
     }

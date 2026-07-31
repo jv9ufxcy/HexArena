@@ -189,7 +189,7 @@ MonoBehaviour:
   speed: 240
   angle: 0
   radius: 2
-  damage: 64
+  damage: 1
 --- !u!58 &2483768550829670575
 CircleCollider2D:
   m_ObjectHideFlags: 0

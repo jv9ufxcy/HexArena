@@ -13,8 +13,10 @@ public class Player : MonoBehaviour,IHittable
 
     [Header("Stats")]
     [SerializeField]
-    private int maxHealth;
-    private int curHealth;
+    private int maxHealth=3;
+    [SerializeField]
+    private int startingHealth=2;
+    private int curHealth=2;
 
     [Header("Movement")]
     private Vector2 velocity = new Vector2();
@@ -30,7 +32,7 @@ public class Player : MonoBehaviour,IHittable
     [Header("Shooting")]
     [SerializeField] GameObject[] bullets;
     [SerializeField] private Transform weaponOffset,gunObject, firingPoint;
-    [SerializeField] private float rotSpeed = 8f;
+    [SerializeField] private float rotSpeed = 8f, shootRecovery = 0.125f;
     private Ray ray;
     private RaycastHit rayHit;
     [SerializeField] private LineRenderer trajectoryLine;
@@ -43,27 +45,36 @@ public class Player : MonoBehaviour,IHittable
     [SerializeField] private int[] ammo = new int[] { 0, 1, 1, 1, 1, 1, 1, 3, 3, 3, 5, 5 };
     [SerializeField] private UIManager uiScript;
     [Header("Spell Effects")]
-    private float stunTimer, guardianTimer;
+    private float stunTimer, guardianTimer, fireRate;
     [SerializeField] private GameObject[] magicObjects;
-    private enum PlayerState { neutral, frozen,frog,stunned,dead}
+    private enum PlayerState { neutral, frozen,frog,firing,stunned,dead}
     [SerializeField]private PlayerState state;
     [Header("SoundEffects")]
     [SerializeField] private AudioManager audioManager;
-    [SerializeField] private string reloadBark = "Reload", fireBark = "Fire", hurtBark = "Hurt", deathBark = "Death", frozenBark = "Frozen", frogBark = "Frog", ghostBark = "Ghost";
+    [SerializeField] private string reloadBark = "Reload", fireBark = "Fire", hurtBark = "Hurt", deathBark = "Death", frozenBark = "Frozen", frogBark = "Frog", ghostBark = "Ghost", healBark="Heal";
 
     [Header("Effects")]
     [SerializeField] private SpriteRenderer spriteRend;
     [SerializeField] private Sprite defaultSprite,frozenSprite,frogSprite;
+    [SerializeField] private Sprite[] healthStateSprite;
     [SerializeField] private Material defaultMat, flashMat;
     [SerializeField] private float yAmp = 0.1f, yFrq = 16f;
     [SerializeField] private float aniMoveSpeed;
+
+    [Header("Invulnerability")]
+    [SerializeField] private Color invulColor;
+    private bool isInvulnerable;
+    [SerializeField] private float invulCooldown, invulFlickerRate = 4f, invulFrames = 90f;
+
+    
     private void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
         rb.gravityScale = 0;
         rb.freezeRotation = true;
         uiScript.AmmoUpdate(gunChamber);
-        curHealth = MaxHealth;
+        curHealth = StartingHealth;
+        OnHealthChanged();
         controls = new PlayerControls();
         trajectoryLine=GetComponentInChildren<LineRenderer>();
     }
@@ -178,6 +189,17 @@ public class Player : MonoBehaviour,IHittable
                     else
                         DeSpell();
                     break;
+                case PlayerState.firing:
+                    if (fireRate > 0)
+                    {
+                        fireRate -= Time.fixedDeltaTime;
+                    }
+                    else
+                    {
+                        fireRate = 0;
+                        state = PlayerState.neutral;
+                    }
+                    break;
                 case PlayerState.stunned:
                     if (stunTimer > 0)
                     {
@@ -195,6 +217,11 @@ public class Player : MonoBehaviour,IHittable
             //rb.MovePosition(rb.position + moveAxis.normalized * moveSpeed * Time.fixedDeltaTime);
             OrbitTarget();
             MoveVelocity();
+            if (invulCooldown > 0) { invulCooldown--; }
+            else
+            {
+                isInvulnerable = false;
+            }
         }
     }
     private void OrbitTarget()
@@ -259,6 +286,9 @@ public class Player : MonoBehaviour,IHittable
     }
     public void Reload(int max, int[] bulletArray)
     {
+        fireRate = shootRecovery;
+        state = PlayerState.firing;
+
         gunChamber.Clear();
         for (int i = 0; i < max; i++)
         {
@@ -335,13 +365,15 @@ public class Player : MonoBehaviour,IHittable
                     GameObject proj = Instantiate(bullets[gunChamber[0]], firingPoint.transform.position, gunObject.rotation);
                     gunChamber.RemoveAt(0);
                     //punch gun
-                    gunObject.DOPunchRotation(new Vector3(0, 0, 60f), 0.12f);
+                    gunObject.DOPunchRotation(new Vector3(0, 0, 60f), shootRecovery);
                     Vector3 punchScale = new Vector3(1.025f, 1.025f, 1);
-                    gunObject.transform.DOPunchScale(punchScale, .25f,2,.125f);
+                    gunObject.transform.DOPunchScale(punchScale, .25f,2,shootRecovery);
                     //set bulletDirection
                     proj.GetComponent<Projectile>().ChangeDirection(CardinalDir(lookAxis));
                     proj.GetComponent<Projectile>().ChangeOwner(this.gameObject);
-
+                    //firingState
+                    fireRate = shootRecovery;
+                    state = PlayerState.firing;
                     uiScript.AmmoUpdate(gunChamber);
                     currentBullet++;
                     PlaySound(fireBark);
@@ -354,21 +386,32 @@ public class Player : MonoBehaviour,IHittable
     {
         curHealth += healthGain;
         curHealth = Mathf.Clamp(curHealth, 0, MaxHealth);
-        uiScript.HealthChange((int)curHealth);
+        OnHealthChanged();
         DamagePopup.Create(transform.position, healthGain, -1);
+        PlaySound(healBark);
         StartCoroutine(FlashWhiteDamage(2));
-    }    
+    }
+
+    private void OnHealthChanged()
+    {
+        uiScript.HealthChange((int)curHealth);
+        int healthState = Mathf.Clamp(curHealth, 1, healthStateSprite.Length - 1);
+        defaultSprite=healthStateSprite[healthState];
+        spriteRend.sprite = defaultSprite;
+    }
+
     public void DoDamage(int damage)
     {
         spriteRend.transform.DOComplete();
         curHealth -= damage;
         curHealth = Mathf.Clamp(curHealth, 0, MaxHealth);
-        uiScript.HealthChange((int)curHealth);
+        OnHealthChanged();
         GameEngine.SetHitPause(15);
         stunTimer = .15f;
         spriteRend.transform.DOShakePosition(0.125f, 1, 10, 120);
         ScreenShake(2,.5f);
         StartCoroutine(FlashWhiteDamage(5));
+        StartInvul(invulFlickerRate, 90f);
         state = PlayerState.stunned;
     }
     private IEnumerator LeapFrog(Vector3 destination)
@@ -388,6 +431,8 @@ public class Player : MonoBehaviour,IHittable
 
     public void Hit(int dam,int effect,int bounceLvl, Vector2 dir)
     {
+        if (isInvulnerable)
+            return;
         DeSpell();
         if (dam>0)
         {
@@ -425,6 +470,7 @@ public class Player : MonoBehaviour,IHittable
 
     public int CurHealth { get => curHealth; set => curHealth = value; }
     public int MaxHealth { get => maxHealth; set => maxHealth = value; }
+    public int StartingHealth { get => startingHealth; set => startingHealth = value; }
 
     void ApplyGuardians(int numOfGuardians)
     {
@@ -460,15 +506,58 @@ public class Player : MonoBehaviour,IHittable
         spriteRend.sprite = defaultSprite;
         state = PlayerState.neutral;
     }
+    public bool GetIsInvulnerable()
+    {
+        return isInvulnerable;
+    }
+    public void SetInvulCooldown(float iFrames)
+    {
+        if (invulCooldown < iFrames)
+        {
+            invulCooldown = iFrames;
+        }
+    }
+    public void StartInvul(float hitFlash, float invulFrames)
+    {
+        if (invulCooldown <= 0)
+        {
+            invulCooldown = invulFrames;
+            isInvulnerable = true;
+        }
+        StartCoroutine(FlashWhiteDamage(hitFlash));
+        StartCoroutine(BlinkWhileInvulnerableCoroutine());
+    }
     private IEnumerator FlashWhiteDamage(float hitFlash)
     {
-        spriteRend.material = defaultMat;
-        spriteRend.material = flashMat;
+        spriteRend.material.SetFloat("_FlashAmt", 0);
+        spriteRend.material.SetFloat("_FlashAmt", 1);
         for (int i = 0; i < hitFlash; i++)
         {
+            spriteRend.material.SetColor("_SpriteColor", Color.white);
             yield return new WaitForFixedUpdate();
         }
-        spriteRend.material = defaultMat;
+        spriteRend.material.SetFloat("_FlashAmt", 0);
+    }
+    private IEnumerator BlinkWhileInvulnerableCoroutine()
+    {
+        while (isInvulnerable)
+        {
+            spriteRend.material.SetColor("_SpriteColor", invulColor);
+            spriteRend.material.SetFloat("_FlashAmt", 0.5f);
+            for (int i = 0; i < invulFlickerRate; i++)
+            {
+                yield return new WaitForFixedUpdate();
+            }
+
+            spriteRend.material.SetColor("_SpriteColor", Color.white);
+            spriteRend.material.SetFloat("_FlashAmt", 0f);
+
+            for (int i = 0; i < invulFlickerRate; i++)
+            {
+                yield return new WaitForFixedUpdate();
+            }
+
+        }
     }
     void ScreenShake(float amp, float time)
     {

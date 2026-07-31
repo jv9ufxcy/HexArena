@@ -59,7 +59,7 @@ MonoBehaviour:
   defaultMat: {fileID: 0}
   flashMat: {fileID: 2100000, guid: 7827467bf931b0949a9c91885d4c723c, type: 2}
   active: 1
-  maxHealth: 256
+  maxHealth: 3
   speed: 4
   stoppingDistance: 5
   retreatDistance: 7

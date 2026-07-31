@@ -80,7 +80,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fe22d9518d53f3f4da91b70e5cf028f1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  maxHealth: 512
+  maxHealth: 3
+  startingHealth: 2
   moveSpeed: 8
   frogSpeed: 4
   lockRotation: 0
@@ -98,13 +99,14 @@ MonoBehaviour:
   gunObject: {fileID: 4352141165958818738}
   firingPoint: {fileID: 8552296539387380574}
   rotSpeed: 8
+  shootRecovery: 0.125
   trajectoryLine: {fileID: 0}
   trajectoryMaxLength: 12
   reflections: 3
   target:
     serializedVersion: 2
     m_Bits: 64
-  gunChamber: 010000000200000003000000040000000500000000000000
+  gunChamber: 050000000100000001000000010000000300000003000000
   ammo: 000000000100000001000000010000000100000001000000010000000300000003000000030000000500000005000000
   uiScript: {fileID: 0}
   magicObjects:
@@ -122,11 +124,21 @@ MonoBehaviour:
   defaultSprite: {fileID: -429080072, guid: ba1bb9bc59d04ef4abd9df9156571f4d, type: 3}
   frozenSprite: {fileID: -1771512393, guid: ba1bb9bc59d04ef4abd9df9156571f4d, type: 3}
   frogSprite: {fileID: 367763228, guid: ba1bb9bc59d04ef4abd9df9156571f4d, type: 3}
+  healthStateSprite:
+  - {fileID: 516306918, guid: ba1bb9bc59d04ef4abd9df9156571f4d, type: 3}
+  - {fileID: 516306918, guid: ba1bb9bc59d04ef4abd9df9156571f4d, type: 3}
+  - {fileID: -429080072, guid: ba1bb9bc59d04ef4abd9df9156571f4d, type: 3}
+  - {fileID: -1226116721, guid: ba1bb9bc59d04ef4abd9df9156571f4d, type: 3}
+  - {fileID: -1226116721, guid: ba1bb9bc59d04ef4abd9df9156571f4d, type: 3}
   defaultMat: {fileID: 0}
   flashMat: {fileID: 2100000, guid: 7827467bf931b0949a9c91885d4c723c, type: 2}
   yAmp: 0.1
   yFrq: 32
   aniMoveSpeed: 0
+  invulColor: {r: 0.8431373, g: 0.32156864, b: 0.29411766, a: 1}
+  invulCooldown: 0
+  invulFlickerRate: 4
+  invulFrames: 90
 --- !u!50 &422356595998710129
 Rigidbody2D:
   serializedVersion: 4

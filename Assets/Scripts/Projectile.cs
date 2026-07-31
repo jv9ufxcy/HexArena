@@ -18,6 +18,7 @@ public class Projectile : MonoBehaviour
     private GameObject owner;
     private Rigidbody2D rb;
     private ParticleSystem ps;
+    private SpriteRenderer sr;
     private Vector3 lastVelocity;
     private AudioManager audioManager;
     [SerializeField] private string hitSound = "Bullet", reflectSound = "Reflect";
@@ -26,6 +27,7 @@ public class Projectile : MonoBehaviour
         rb = GetComponent<Rigidbody2D>();
         audioManager = AudioManager.instance;
         ps = GetComponent<ParticleSystem>();
+        sr = GetComponentInChildren<SpriteRenderer>();
     }
     // Start is called before the first frame update
     void Start()
@@ -34,7 +36,7 @@ public class Projectile : MonoBehaviour
         direction = transform.up;
         rb.velocity = direction * speed;
 
-        this.transform.DOPunchScale(punchScale, .125f);
+        sr.transform.DOPunchScale(punchScale, .125f);
         switch (spellEffect)
         {
             case Spell.Wound:
@@ -84,7 +86,7 @@ public class Projectile : MonoBehaviour
                     break;
                 case Spell.Skewer:
                     Physics2D.IgnoreCollision(other,GetComponent<Collider2D>(), true);
-                    hit.Hit(damage*bouncePower, (int)spellEffect, bouncePower, direction);
+                    hit.Hit(damage/**bouncePower*/, (int)spellEffect, bouncePower, direction);
                     break;
                 case Spell.Guardian:
                     hit.Hit(damage, (int)spellEffect, bouncePower, direction);

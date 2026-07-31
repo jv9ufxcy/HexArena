@@ -174,7 +174,7 @@ MonoBehaviour:
   defaultMat: {fileID: 0}
   flashMat: {fileID: 2100000, guid: 7827467bf931b0949a9c91885d4c723c, type: 2}
   active: 1
-  maxHealth: 256
+  maxHealth: 2
   speed: 5
   stoppingDistance: 4
   retreatDistance: 7
@@ -200,6 +200,7 @@ MonoBehaviour:
   attackState: 0
   numOfAttacks: 1
   chargeSpeed: 20
+  curAtkNum: 0
   actionCooldown: 1
   aniMoveSpeed: 0
   yAmp: 0.1
