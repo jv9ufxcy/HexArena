@@ -10,7 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 9055234221321402660}
   - component: {fileID: 4974482650240993944}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: Circle
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -94,7 +94,7 @@ GameObject:
   m_Component:
   - component: {fileID: 922074251009270570}
   - component: {fileID: 2341834874231624647}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: Circle (1)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -180,7 +180,7 @@ GameObject:
   - component: {fileID: 4599523077685411397}
   - component: {fileID: 3292698985674371611}
   - component: {fileID: 7036769373239216982}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: ExplosionBall
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -252,7 +252,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   velocity: {x: 0, y: 0}
   damage: 1
-  speed: 8
+  speed: 3.75
   rotation: 0
   canHitSelf: 0
   lifetime: 2

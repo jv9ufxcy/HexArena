@@ -82,7 +82,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   maxHealth: 3
   startingHealth: 2
-  moveSpeed: 8
+  moveSpeed: 5.625
   frogSpeed: 4
   lockRotation: 0
   orbitTarget: {fileID: 7867109675696581925}
@@ -120,6 +120,7 @@ MonoBehaviour:
   frozenBark: Frozen
   frogBark: Frog
   ghostBark: Ghost
+  healBark: Heal
   spriteRend: {fileID: 548074741418607598}
   defaultSprite: {fileID: -429080072, guid: ba1bb9bc59d04ef4abd9df9156571f4d, type: 3}
   frozenSprite: {fileID: -1771512393, guid: ba1bb9bc59d04ef4abd9df9156571f4d, type: 3}
@@ -155,7 +156,7 @@ Rigidbody2D:
   m_LinearDrag: 0
   m_AngularDrag: 0.05
   m_GravityScale: 0
-  m_Material: {fileID: 0}
+  m_Material: {fileID: 6200000, guid: bfab7094704d3c64ca26d349feb1f157, type: 2}
   m_IncludeLayers:
     serializedVersion: 2
     m_Bits: 0
@@ -175,7 +176,7 @@ CircleCollider2D:
   m_GameObject: {fileID: 2040594465266020042}
   m_Enabled: 1
   m_Density: 1
-  m_Material: {fileID: 0}
+  m_Material: {fileID: 6200000, guid: bfab7094704d3c64ca26d349feb1f157, type: 2}
   m_IncludeLayers:
     serializedVersion: 2
     m_Bits: 0
@@ -200,7 +201,7 @@ CircleCollider2D:
   m_UsedByComposite: 0
   m_Offset: {x: 0, y: 0}
   serializedVersion: 2
-  m_Radius: 0.25
+  m_Radius: 0.5
 --- !u!1 &3124992999561634615
 GameObject:
   m_ObjectHideFlags: 0

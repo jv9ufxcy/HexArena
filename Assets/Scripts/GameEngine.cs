@@ -30,6 +30,10 @@ public class GameEngine : MonoBehaviour
 
     public Transform DamagePopup;
 
+    public Spawner spawner;
+    public TilemapManager tilemapManager;
+    [SerializeField]private List<int> levels = new List<int>();
+    private int levelIndex = 0;
     private int tick;
     private float tickTimer;
     private const float tickTimerMax = 1f;
@@ -46,7 +50,22 @@ public class GameEngine : MonoBehaviour
         cineShake = Camera.main.GetComponent<CinemachineShake>();
         timerColor = timerText.color;
         timerText.gameObject.SetActive(false);
-        //SetRemainingTime(15);
+        StartGame();
+    }
+
+    private void StartGame()
+    {
+        SetRemainingTime(60);
+
+        tilemapManager.LoadLevel(levels[levelIndex]);
+        levelIndex++;
+        if (levelIndex>=levels.Count)
+        {
+            levelIndex = 0;
+        }
+
+        spawner.possibleSpawnPoints = new List<Vector3>(tilemapManager.monsterPositions);
+        spawner.ActivateSpawner();
     }
 
     public void ShakeCamera(float _pow, float _time)
@@ -129,9 +148,16 @@ public class GameEngine : MonoBehaviour
     public static void GlobalPrefab(int _index, GameObject _parentObj)
     {
         GameObject nextPrefab = Instantiate(gameEngine.globalPrefabs[_index], _parentObj.transform.position, _parentObj.transform.rotation, _parentObj.transform);
-        nextPrefab.transform.localScale = _parentObj.transform.localScale;
+        //nextPrefab.transform.localScale = _parentObj.transform.localScale;
         
         nextPrefab.transform.SetParent(null);
+       
+    }
+    public static void GlobalPrefab(int _index, Vector3 position)
+    {
+        GameObject nextPrefab = Instantiate(gameEngine.globalPrefabs[_index], position, Quaternion.identity);
+        nextPrefab.transform.localScale = Vector3.one;
+        
        
     }
 }

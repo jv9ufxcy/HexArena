@@ -312,7 +312,7 @@ public class Player : MonoBehaviour,IHittable
     {
         Vector2 latSpeed = velocity;
         aniMoveSpeed = Vector3.SqrMagnitude(latSpeed);
-        if (aniMoveSpeed > 0)
+        if (aniMoveSpeed > 1)
         {
             float yPos = Mathf.Sin(Time.time * yFrq) * yAmp;
             spriteRend.gameObject.transform.localPosition = new Vector3(0, yPos, 0);
@@ -437,7 +437,7 @@ public class Player : MonoBehaviour,IHittable
         if (dam>0)
         {
             DoDamage(dam);
-            velocity = dir * 8;
+            velocity = dir * moveSpeed;
             PlaySound(hurtBark);
         }
         SpellEffect(effect, bounceLvl);

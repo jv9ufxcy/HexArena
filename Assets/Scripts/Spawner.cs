@@ -25,6 +25,8 @@ public class Spawner : MonoBehaviour
     public bool canSpawn = true;
     private enum spawnState { Idle, Active, Conclusion }
     [SerializeField] private spawnState battleState;
+    private enum spawnerType { Encounter, Arena }
+    [SerializeField] private spawnerType spawnerMode;
 
     [SerializeField]private int waveDuration;
     private float waveTimer;
@@ -46,10 +48,10 @@ public class Spawner : MonoBehaviour
     //Sophie Spawner
     [SerializeField] private float waveStartDelay = 1;
     [SerializeField] private List<Wave> waves = new List<Wave>();
-    [SerializeField] private List<Transform> possibleSpawnPoints = new List<Transform>();
+    public List<Vector3> possibleSpawnPoints = new List<Vector3>();
 
     //private List<Enemy> LivingEnemies = new List<Enemy>();
-    private List<Transform> pointsClaimedPerWave = new List<Transform>();//this will store the points that each enemy will use for spawning so that no one doubles up.
+    private List<Vector3> pointsClaimedPerWave = new List<Vector3>();//this will store the points that each enemy will use for spawning so that no one doubles up.
     private void Awake()
     {
         //spawner = this;
@@ -64,21 +66,28 @@ public class Spawner : MonoBehaviour
     private void Start()
     {
         //GenerateWave();
-        possibleSpawnPoints = new List<Transform>(GetComponentsInChildren<Transform>());
+        List<Transform> possibleTransforms = new List<Transform>(GetComponentsInChildren<Transform>());
+        foreach (Transform item in possibleTransforms)
+        {
+            possibleSpawnPoints.Add(item.position);
+        }
+        //possibleSpawnPoints = new List<Transform>(GetComponentsInChildren<Transform>());
     }
     private void OnTriggerEnter2D(Collider2D collision)
     {
         if (collision.CompareTag("Player"))
         {
             if (battleState == spawnState.Idle)
-            {
-                canSpawn = true;
-                waveTimer = waveStartDelay;
-                StartCoroutine(StartWaves());
-                battleState = spawnState.Active;
-            }
+                ActivateSpawner();
         }
-        
+    }
+
+    public void ActivateSpawner()
+    {
+        canSpawn = true;
+        waveTimer = waveStartDelay;
+        StartCoroutine(StartWaves());
+        battleState = spawnState.Active;
     }
     private void OnTriggerExit2D(Collider2D collision)
     {
@@ -152,9 +161,9 @@ public class Spawner : MonoBehaviour
                 int spawnIndex = (int)waves[b].EnemiesInWave[i].enemyIndex;//get enum index
                 for (int a = 0; a < waves[b].EnemiesInWave[i].NumToSpawn; a++)//spawn as many of that enemy as we need
                 {
-                    Transform t = GetRandomTransform();
-                    SummonEnemy(spawnIndex, t.position);
-                    GameEngine.GlobalPrefab(5, t.gameObject);//drop shadow
+                    Vector3 t = GetRandomPosition();
+                    SummonEnemy(spawnIndex, t);
+                    GameEngine.GlobalPrefab(5, t);//drop shadow
                 }
             }
             yield return new WaitForSeconds(waves[b].waveDuration);
@@ -162,12 +171,12 @@ public class Spawner : MonoBehaviour
         canSpawn = false;
     }
 
-    Transform GetRandomTransform()//returns a random transform from the list given
+    Vector3 GetRandomPosition()//returns a random transform from the list given
     {
         int rand = UnityEngine.Random.Range(0, possibleSpawnPoints.Count);
 
         if (pointsClaimedPerWave.Contains(possibleSpawnPoints[rand]))//if the point we chose matches one that was already chosen, 
-            GetRandomTransform();//recursion! Choose another point
+            GetRandomPosition();//recursion! Choose another point
         else
             pointsClaimedPerWave.Add(possibleSpawnPoints[rand]);//if it's good, we add it to the list and continue
 

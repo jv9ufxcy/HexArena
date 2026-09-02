@@ -130,7 +130,7 @@ public class Enemy : MonoBehaviour,IHittable
         {
             DeSpell();
             DoDamage(dam);
-            velocity = dir * 8;
+            velocity = CardinalDir(dir) * 8;
         }
         SpellEffect(effect, bounceLvl);
         DamagePopup.Create(transform.position, dam, bounceLvl);
@@ -291,8 +291,9 @@ public class Enemy : MonoBehaviour,IHittable
         HealthChance();
         if (eType == EnemyType.bomber)
         {
+            GameObject hit = Instantiate(projectileObject, transform.position + (Vector3)CardinalDir(direction.normalized), projectileFirePoint.rotation);
             //FireArrow(1, 8, 8);
-            FireBulletWave(1, 8, 16, 1, 1, 0, 360, 0);
+            //FireBulletWave(1, 4, 16, 1, 1, 0, 360, 0);
         }
         gameObject.SetActive(false);
     }
@@ -356,9 +357,13 @@ public class Enemy : MonoBehaviour,IHittable
                         //punchy forward
                         AttackAnim();
                         //spawn hitbox
-                        GameObject hit = Instantiate(projectileObject, transform.position + (Vector3)direction.normalized, projectileFirePoint.rotation);
-                        hit.GetComponent<Projectile>().ChangeDirection(direction);
-                        hit.GetComponent<Projectile>().ChangeOwner(this.gameObject);
+                        GameObject hit = Instantiate(projectileObject, transform.position + (Vector3)CardinalDir(direction.normalized), projectileFirePoint.rotation);
+                        Projectile hitProj = hit.GetComponent<Projectile>();
+                        if (hitProj!=null)
+                        {
+                            hitProj.ChangeDirection(CardinalDir(direction));
+                            hitProj.ChangeOwner(this.gameObject);
+                        }
                         //bulletFX
                         Vector3 punchScale = new Vector3(1.125f, 1.125f, 1);
                         //hit.transform.DOPunchScale(punchScale, .125f);
@@ -412,7 +417,7 @@ public class Enemy : MonoBehaviour,IHittable
                     {
                         //punchy forward
                         AttackAnim();
-                        velocity = direction * chargeSpeed;
+                        velocity = CardinalDir(direction) * chargeSpeed;
                         //spawn hitbox
                         GameObject hit = Instantiate(projectileObject, transform.position + (Vector3)direction.normalized, projectileFirePoint.rotation, this.transform);
                         hit.GetComponent<Projectile>().ChangeDirection(direction);
@@ -481,7 +486,7 @@ public class Enemy : MonoBehaviour,IHittable
         {
             Vector2 target = playerTarget.transform.position;
             direction = new Vector2(target.x - transform.position.x, target.y - transform.position.y).normalized;
-            velocity = direction * speed;
+            velocity = CardinalDir(direction) * speed;
         }
         else//attack
         { 
@@ -650,5 +655,15 @@ public class Enemy : MonoBehaviour,IHittable
             b.owner = this.gameObject;
         }
         return spawnedBullets;
+    }
+    public static Vector2 CardinalDir(Vector2 vector)
+    {
+        float angle = Mathf.Atan2(vector.y, vector.x);
+        float hypotenuse = Mathf.Sqrt(vector.x * vector.x) + (vector.y * vector.y);
+        float rad = Mathf.Deg2Rad * 45;
+        float snap = Mathf.Round(angle / rad) * rad;
+        //int octant = Mathf.RoundToInt(45 * angle / (2 * Mathf.PI) + 45) % 45;
+        Vector2 snappedVector = new Vector2(Mathf.Cos(snap) * hypotenuse, Mathf.Sin(snap) * hypotenuse);
+        return snappedVector;
     }
 }
