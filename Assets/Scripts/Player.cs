@@ -41,8 +41,8 @@ public class Player : MonoBehaviour,IHittable
     [SerializeField] private LayerMask target;
     [Header("Ammo")]
     [Range(0, 5)]
-    public List<int> gunChamber = new List<int> { 5, 1, 1, 1, 3, 3 };
-    [SerializeField] private int[] ammo = new int[] { 0, 1, 1, 1, 1, 1, 1, 3, 3, 3, 5, 5 };
+    public List<int> gunChamber = new List<int> { 5, 5, 5, 1, 3, 1 };
+    [SerializeField] private int[] ammo = new int[] { 0, 1, 5, 1, 5, 1, 5, 3, 3, 3, 5, 5 };
     [SerializeField] private UIManager uiScript;
     [Header("Spell Effects")]
     private float stunTimer, guardianTimer, fireRate;
@@ -214,7 +214,7 @@ public class Player : MonoBehaviour,IHittable
                 default:
                     break;
             }
-            //rb.MovePosition(rb.position + moveAxis.normalized * moveSpeed * Time.fixedDeltaTime);
+            
             OrbitTarget();
             MoveVelocity();
             if (invulCooldown > 0) { invulCooldown--; }
@@ -264,12 +264,12 @@ public class Player : MonoBehaviour,IHittable
     }
     private void MoveVelocity()
     {
-        rb.velocity = velocity;
-        //rb.MovePosition(rb.position + velocity * Time.fixedDeltaTime);
+        //rb.velocity = velocity;
+        rb.MovePosition(rb.position + velocity * Time.fixedDeltaTime);
         //rb.MovePosition(rb.position + moveAxis.normalized * moveSpeed * Time.fixedDeltaTime);
         velocity.Scale(new Vector3(0.5f,0.5f,0.5f));
     }
-    private void Death()
+    public void Death()
     {
         StartCoroutine(GameOver());
     }
@@ -387,7 +387,7 @@ public class Player : MonoBehaviour,IHittable
         curHealth += healthGain;
         curHealth = Mathf.Clamp(curHealth, 0, MaxHealth);
         OnHealthChanged();
-        DamagePopup.Create(transform.position, healthGain, -1);
+        //DamagePopup.Create(transform.position, healthGain, -1);
         PlaySound(healBark);
         StartCoroutine(FlashWhiteDamage(2));
     }
@@ -411,7 +411,7 @@ public class Player : MonoBehaviour,IHittable
         spriteRend.transform.DOShakePosition(0.125f, 1, 10, 120);
         ScreenShake(2,.5f);
         StartCoroutine(FlashWhiteDamage(5));
-        StartInvul(invulFlickerRate, 90f);
+        StartInvul(invulFlickerRate, 90f, invulColor);
         state = PlayerState.stunned;
     }
     private IEnumerator LeapFrog(Vector3 destination)
@@ -441,7 +441,7 @@ public class Player : MonoBehaviour,IHittable
             PlaySound(hurtBark);
         }
         SpellEffect(effect, bounceLvl);
-        DamagePopup.Create(transform.position, dam, bounceLvl);
+        //DamagePopup.Create(transform.position, dam, bounceLvl);
     }
     void SpellEffect(int effect, int level)
     {
@@ -486,6 +486,11 @@ public class Player : MonoBehaviour,IHittable
         }
         PlaySound(ghostBark);
     }
+    public void ApplyStun()
+    {
+        stunTimer = 2;
+        state = PlayerState.stunned;
+    }
     void ApplyPolymorph()
     {
         stunTimer = 3;
@@ -517,7 +522,7 @@ public class Player : MonoBehaviour,IHittable
             invulCooldown = iFrames;
         }
     }
-    public void StartInvul(float hitFlash, float invulFrames)
+    public void StartInvul(float hitFlash, float invulFrames, Color invulColor)
     {
         if (invulCooldown <= 0)
         {
@@ -525,7 +530,7 @@ public class Player : MonoBehaviour,IHittable
             isInvulnerable = true;
         }
         StartCoroutine(FlashWhiteDamage(hitFlash));
-        StartCoroutine(BlinkWhileInvulnerableCoroutine());
+        StartCoroutine(BlinkWhileInvulnerableCoroutine(invulColor));
     }
     private IEnumerator FlashWhiteDamage(float hitFlash)
     {
@@ -538,7 +543,7 @@ public class Player : MonoBehaviour,IHittable
         }
         spriteRend.material.SetFloat("_FlashAmt", 0);
     }
-    private IEnumerator BlinkWhileInvulnerableCoroutine()
+    private IEnumerator BlinkWhileInvulnerableCoroutine(Color invulColor)
     {
         while (isInvulnerable)
         {

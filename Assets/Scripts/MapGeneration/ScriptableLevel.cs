@@ -11,6 +11,9 @@ public class ScriptableLevel : ScriptableObject
     public List<SavedTile> PitTiles;
     public List<SavedTile> MonsterTiles;
     public List<SavedTile> ItemTiles;
+    public List<SavedTile> PickupTiles;
+    public List<SavedTile> DoorTiles;
+    public List<SavedTile> PlayerTiles;
 }
 [Serializable]
 public class SavedTile

@@ -1,11 +1,10 @@
+using DG.Tweening;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using DG.Tweening;
 
-public class HealthPickup : MonoBehaviour
+public class Key : MonoBehaviour
 {
-    [SerializeField] private int healAmt = 60;
     private SpriteRenderer spriteVisual;
     private Vector3 spriteOffset = new Vector3();
     private bool falling = true;
@@ -13,18 +12,19 @@ public class HealthPickup : MonoBehaviour
     private void OnEnable()
     {
         falling = true;
+        fallingTimer = .5f;
     }
     private void Start()
     {
-        spriteVisual=GetComponentInChildren<SpriteRenderer>();
+        spriteVisual = GetComponentInChildren<SpriteRenderer>();
         spriteOffset = spriteVisual.transform.position;
-        
-        spriteVisual.transform.DOPunchScale(Vector3.one*1.25f, fallingTimer/2);
+        spriteVisual.transform.DOPunchScale(Vector3.one * 1.25f, fallingTimer / 2);
     }
     // Update is called once per frame
     void Update()
     {
         spriteVisual.transform.position = new Vector3(spriteOffset.x, spriteOffset.y + Mathf.Sin(Time.time * 4) * 0.125f, spriteOffset.z);
+
         if (falling)
         {
             fallingTimer -= Time.deltaTime;
@@ -34,14 +34,14 @@ public class HealthPickup : MonoBehaviour
                 falling = false;
             }
         }
-        
     }
     private void OnTriggerEnter2D(Collider2D collision)
     {
-        if (collision.CompareTag("Player")&&!falling)
+        if (collision.CompareTag("Player") && !falling)
         {
-            GameEngine.gameEngine.mainCharacter.DoHeal(healAmt);
-            GameEngine.gameEngine.mainCharacter.StartInvul(5f, 30f, Color.white);
+            GameEngine.gameEngine.AddKey();
+            GameEngine.SetHitPause(5f);
+            GameEngine.gameEngine.mainCharacter.GetComponent<Player>().StartInvul(5f, 30f, Color.white);
             Destroy(gameObject);
         }
     }

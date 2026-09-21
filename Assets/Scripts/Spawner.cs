@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using Hex.ObjectPooling;
 using System;
+using DG.Tweening;
 
 [Serializable]
 public class EnemyDictionary
@@ -152,23 +153,23 @@ public class Spawner : MonoBehaviour
     {
         yield return new WaitForSeconds(waveStartDelay);
         //bState = battleState.active;
-        for (int b = 0; b < waves.Count; b++)
+        for (currentWave = 0; currentWave < waves.Count; currentWave++)
         {
             pointsClaimedPerWave.Clear();//clear our list of points grabbed
-            for (int i = 0; i < waves[b].EnemiesInWave.Count; i++)//Go through our list of enemies and spawn each one
+            for (int i = 0; i < waves[currentWave].EnemiesInWave.Count; i++)//Go through our list of enemies and spawn each one
             {
                 //grab the prefab of that enemy based on the enum type
-                int spawnIndex = (int)waves[b].EnemiesInWave[i].enemyIndex;//get enum index
-                for (int a = 0; a < waves[b].EnemiesInWave[i].NumToSpawn; a++)//spawn as many of that enemy as we need
+                int spawnIndex = (int)waves[currentWave].EnemiesInWave[i].enemyIndex;//get enum index
+                for (int a = 0; a < waves[currentWave].EnemiesInWave[i].NumToSpawn; a++)//spawn as many of that enemy as we need
                 {
                     Vector3 t = GetRandomPosition();
                     SummonEnemy(spawnIndex, t);
                     GameEngine.GlobalPrefab(5, t);//drop shadow
                 }
             }
-            yield return new WaitForSeconds(waves[b].waveDuration);
+            yield return new WaitForSeconds(waves[currentWave].waveDuration);
         }
-        canSpawn = false;
+        EndWaves();
     }
 
     Vector3 GetRandomPosition()//returns a random transform from the list given
@@ -197,6 +198,19 @@ public class Spawner : MonoBehaviour
                 battleState = spawnState.Conclusion;
             }
         }
+    }
+    public void EndWaves()
+    {
+        GameObject[] enemies;
+        foreach (GameObject go in spawnedEnemies)
+        {
+            Enemy enemy = go.GetComponent<Enemy>();
+            enemy.DeSpawn();
+        }
+        canSpawn = false;
+        waveTimer = 2;
+        currentWave = 0;
+        battleState = spawnState.Conclusion;
     }
     //[System.Serializable]
     //public class Enemy

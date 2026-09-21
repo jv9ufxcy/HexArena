@@ -26,7 +26,7 @@ public class Enemy : MonoBehaviour,IHittable
     [Header("Movement")]
     private Vector2 velocity = new Vector2();
     [SerializeField]
-    private float speed;
+    private float speed, chargeSpeed = 7.5f;
     [SerializeField]
     private float stoppingDistance;
     [SerializeField]
@@ -130,10 +130,10 @@ public class Enemy : MonoBehaviour,IHittable
         {
             DeSpell();
             DoDamage(dam);
-            velocity = CardinalDir(dir) * 8;
+            velocity = CardinalDir(dir) * 5.625f;
         }
         SpellEffect(effect, bounceLvl);
-        DamagePopup.Create(transform.position, dam, bounceLvl);
+        //DamagePopup.Create(transform.position, dam, bounceLvl);
     }
     void SpellEffect(int effect,int level)
     {
@@ -269,12 +269,13 @@ public class Enemy : MonoBehaviour,IHittable
                 guardiansCreated.Clear();
             }
             PlaySound(deathBark);
+            velocity = Vector2.zero;
             eState=EnemyState.neutral;
             shotTimer = startTimeBtwShots;
             StartCoroutine(EnemyDeath(shakeDuration, shakeStrength, blinkDuration, hitFreezeFrames));
         }
     }
-    private IEnumerator EnemyDeath(float shakeDur, float shakeStr, int blinkDur, int hitFreezeFrames)
+    public IEnumerator EnemyDeath(float shakeDur, float shakeStr, int blinkDur, int hitFreezeFrames)
     {
         active = false;
         int hitPause = hitFreezeFrames;
@@ -292,9 +293,17 @@ public class Enemy : MonoBehaviour,IHittable
         if (eType == EnemyType.bomber)
         {
             GameObject hit = Instantiate(projectileObject, transform.position + (Vector3)CardinalDir(direction.normalized), projectileFirePoint.rotation);
-            //FireArrow(1, 8, 8);
-            //FireBulletWave(1, 4, 16, 1, 1, 0, 360, 0);
         }
+        gameObject.SetActive(false);
+    }
+    public void DeSpawn()
+    {
+        StartCoroutine(Kill());
+    }
+    private IEnumerator Kill()
+    {
+        DeSpell();
+        yield return new WaitForEndOfFrame();
         gameObject.SetActive(false);
     }
     int baseHPDropChance = 1;
@@ -334,7 +343,7 @@ public class Enemy : MonoBehaviour,IHittable
 
     private enum AttackingState { standby,attack, recover,}
     [SerializeField]private AttackingState attackState;
-    [SerializeField] private int numOfAttacks = 1, chargeSpeed = 24, curAtkNum=0;
+    [SerializeField] private int numOfAttacks = 1, curAtkNum=0;
     private void MeleeAttack()
     {
         switch (attackState)

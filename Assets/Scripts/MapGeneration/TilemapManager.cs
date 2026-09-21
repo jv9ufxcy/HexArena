@@ -1,4 +1,3 @@
-using Cinemachine.Editor;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -10,11 +9,15 @@ using UnityEngine.Tilemaps;
 
 public class TilemapManager : MonoBehaviour
 {
-    [SerializeField] private Tilemap _groundMap, _unitMap, _pitMap, _monsterMap, _itemMap;
+    [SerializeField] private Tilemap _groundMap, _unitMap, _pitMap, _monsterMap, _itemMap, _pickupMap, _playerMap, _doorMap;
     [SerializeField] private int _levelIndex;
     public List<Vector3>monsterPositions = new List<Vector3>();
+    public List<Vector3>itemPositions = new List<Vector3>();
+    public List<Vector3>pickupPositions = new List<Vector3>();
+    public List<Vector3>playerPositions = new List<Vector3>();
+    public List<Vector3>doorPositions = new List<Vector3>();
     [SerializeField] private Spawner monsterSpawner;
-
+#if UNITY_EDITOR
     public void SaveMap()
     {
         var newLevel = ScriptableObject.CreateInstance<ScriptableLevel>();
@@ -27,6 +30,9 @@ public class TilemapManager : MonoBehaviour
         newLevel.PitTiles = GetTilesFromMap(_pitMap).ToList();
         newLevel.MonsterTiles = GetTilesFromMap(_monsterMap).ToList();
         newLevel.ItemTiles = GetTilesFromMap(_itemMap).ToList();
+        newLevel.PickupTiles = GetTilesFromMap(_pickupMap).ToList();
+        newLevel.DoorTiles = GetTilesFromMap(_doorMap).ToList();
+        newLevel.PlayerTiles = GetTilesFromMap(_playerMap).ToList();
 
         ScriptableObjectUtility.SaveLevelFile(newLevel);
 
@@ -46,6 +52,7 @@ public class TilemapManager : MonoBehaviour
             }
         }
     }
+#endif
     public void ClearMap()
     {
         var maps = GetComponentsInChildren<Tilemap>();
@@ -101,6 +108,7 @@ public class TilemapManager : MonoBehaviour
                     break;
             }
         }
+        Vector3 offset = new Vector3(0.5f, 0.5f, 0f);
         monsterPositions.Clear();
         foreach (var savedTile in level.MonsterTiles)
         {
@@ -108,7 +116,59 @@ public class TilemapManager : MonoBehaviour
             {
                 case TileType.Monster:
                     SetTile(_monsterMap, savedTile);
-                    monsterPositions.Add(savedTile.Position);
+                    monsterPositions.Add(savedTile.Position + offset);
+                    break;
+                default:
+                    break;
+            }
+        }
+        itemPositions.Clear();
+        foreach (var savedTile in level.ItemTiles)
+        {
+            switch (savedTile.Tile.Type)
+            {
+                case TileType.Item:
+                    SetTile(_itemMap, savedTile);
+                    itemPositions.Add(savedTile.Position + offset);
+                    break;
+                default:
+                    break;
+            }
+        }
+        pickupPositions.Clear();
+        foreach (var savedTile in level.PickupTiles)
+        {
+            switch (savedTile.Tile.Type)
+            {
+                case TileType.Pickup:
+                    SetTile(_pickupMap, savedTile);
+                    pickupPositions.Add(savedTile.Position+offset);
+                    break;
+                default:
+                    break;
+            }
+        }
+        doorPositions.Clear();
+        foreach (var savedTile in level.DoorTiles)
+        {
+            switch (savedTile.Tile.Type)
+            {
+                case TileType.Door:
+                    SetTile(_doorMap, savedTile);
+                    doorPositions.Add(savedTile.Position + offset);
+                    break;
+                default:
+                    break;
+            }
+        }
+        playerPositions.Clear();
+        foreach (var savedTile in level.PlayerTiles)
+        {
+            switch (savedTile.Tile.Type)
+            {
+                case TileType.Player:
+                    SetTile(_playerMap, savedTile);
+                    playerPositions.Add(savedTile.Position + offset);
                     break;
                 default:
                     break;

@@ -228,7 +228,7 @@ MonoBehaviour:
   flashMat: {fileID: 2100000, guid: 7827467bf931b0949a9c91885d4c723c, type: 2}
   active: 1
   maxHealth: 1
-  speed: 7.5
+  speed: 5.625
   stoppingDistance: 2
   retreatDistance: 7
   projectileObject: {fileID: 1320217202608657343, guid: 1a7bc6be7b24b7c40bf7cdf68108c342, type: 3}

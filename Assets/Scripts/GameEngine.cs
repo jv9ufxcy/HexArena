@@ -56,18 +56,64 @@ public class GameEngine : MonoBehaviour
     private void StartGame()
     {
         SetRemainingTime(60);
-
-        tilemapManager.LoadLevel(levels[levelIndex]);
-        levelIndex++;
-        if (levelIndex>=levels.Count)
-        {
-            levelIndex = 0;
-        }
+        IncrementNextLevel();
 
         spawner.possibleSpawnPoints = new List<Vector3>(tilemapManager.monsterPositions);
         spawner.ActivateSpawner();
+        PopulateLevel();
     }
 
+    private void PopulateLevel()
+    {
+        foreach (Vector3 pos in tilemapManager.itemPositions)
+        {
+            GlobalPrefab(10, pos);
+        }
+        foreach (Vector3 pos in tilemapManager.pickupPositions)
+        {
+            GlobalPrefab(11, pos);
+        }
+        int rand = UnityEngine.Random.Range(0, tilemapManager.playerPositions.Count);
+        mainCharacter.transform.position = tilemapManager.playerPositions[rand];
+    }
+
+    private void IncrementNextLevel()
+    {
+        tilemapManager.LoadLevel(levels[levelIndex]);
+        levelIndex++;
+        if (levelIndex >= levels.Count)
+        {
+            levelIndex = 0;
+        }
+    }
+
+    public void NextLevel(GameObject door)
+    {
+        StartCoroutine(NextLevelStart(door));
+    }
+    private IEnumerator NextLevelStart(GameObject door)
+    {
+        mainCharacter.DoHeal(1);
+        PauseTimer();
+        spawner.EndWaves();
+        mainCharacter.ApplyStun();
+        mainCharacter.StartInvul(60f, 120f, Color.white);
+        yield return new WaitForSeconds(1f);
+        Destroy(door);
+
+        IncrementNextLevel();
+        yield return new WaitForSeconds(1f);
+        PopulateLevel();
+        spawner.possibleSpawnPoints = new List<Vector3>(tilemapManager.monsterPositions);
+        spawner.ActivateSpawner();
+        SetRemainingTime(60);
+
+    }
+    private void FailLevel()
+    {
+        spawner.EndWaves();
+        mainCharacter.Death();
+    }
     public void ShakeCamera(float _pow, float _time)
     {
         cineShake.ShakeCamera(_pow, _time);
@@ -87,7 +133,10 @@ public class GameEngine : MonoBehaviour
             if (countDown) CountdownTimer();
         }
     }
-
+    public void PauseTimer()
+    {
+        countDown = false;
+    }
     private void ElapsedTimer()
     {
         elapsedTime += Time.deltaTime;
@@ -104,6 +153,8 @@ public class GameEngine : MonoBehaviour
             remainingTime = 0;
             timerText.color = Color.red;
             Debug.Log("TIME OVER");
+            FailLevel();
+            countDown = false;
         }
         int minutes = Mathf.FloorToInt(remainingTime / 60);
         int seconds = Mathf.FloorToInt(remainingTime % 60);
@@ -125,16 +176,16 @@ public class GameEngine : MonoBehaviour
         timerText.SetText(string.Format("{0:00}:{1:00}", minutes, seconds));
     }
 
-    void FixedUpdate ()
+    void FixedUpdate()
     {
-        if (hitStop>0)
+        if (hitStop > 0)
         {
             hitStop--;
         }
         else
         {
             tickTimer += Time.fixedDeltaTime;
-            if (tickTimer>=tickTimerMax)
+            if (tickTimer >= tickTimerMax)
             {
                 tickTimer -= tickTimerMax;
                 tick++;
@@ -144,7 +195,38 @@ public class GameEngine : MonoBehaviour
                 }
             }
         }
-	}
+    }
+    [Header("KeyDoor")]
+    [SerializeField] private int keyCount;
+    public void AddKey()
+    {
+        keyCount++;
+        if (keyCount>=4)
+        {
+            SummonDoor();
+            
+            keyCount = 0;
+        }
+    }
+    private void SummonDoor()
+    {
+        //int rand = UnityEngine.Random.Range(0, tilemapManager.doorPositions.Count);
+        List<float> distances = new List<float>();
+        foreach (Vector3 pos in tilemapManager.doorPositions)
+        {
+            float dist = Vector3.Distance(mainCharacter.transform.position, pos);
+            distances.Add(dist);
+        }
+        distances.Sort();
+        foreach (Vector3 pos in tilemapManager.doorPositions)
+        {
+            if (distances[tilemapManager.doorPositions.Count-1] == Vector3.Distance(mainCharacter.transform.position, pos))
+            {
+                GlobalPrefab(12, pos);
+                SetHitPause(30f);
+            }
+        }
+    }
     public static void GlobalPrefab(int _index, GameObject _parentObj)
     {
         GameObject nextPrefab = Instantiate(gameEngine.globalPrefabs[_index], _parentObj.transform.position, _parentObj.transform.rotation, _parentObj.transform);
@@ -157,7 +239,5 @@ public class GameEngine : MonoBehaviour
     {
         GameObject nextPrefab = Instantiate(gameEngine.globalPrefabs[_index], position, Quaternion.identity);
         nextPrefab.transform.localScale = Vector3.one;
-        
-       
     }
 }

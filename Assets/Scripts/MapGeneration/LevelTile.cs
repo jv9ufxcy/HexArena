@@ -20,5 +20,8 @@ public enum TileType
     //Actor
     Monster = 1000,
     Item = 1001,
-    Turret = 1002
+    Player = 1002,
+    Pickup = 1003,
+    Door = 1004,
+
 }

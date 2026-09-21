@@ -56,7 +56,13 @@ public class Projectile : MonoBehaviour
                 break;
         }
     }
-
+    private void Update()
+    {
+        if (GameEngine.hitStop <= 0)
+            rb.velocity = direction * Mathf.Max(speed, 0);
+        else
+            rb.velocity = Vector3.zero;
+    }
     public void ChangeTarget(Vector2 target, GameObject self)
     {
         this.direction = new Vector2(target.x - transform.position.x, target.y - transform.position.y);

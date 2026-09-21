@@ -19,7 +19,10 @@ public class Bullet : MonoBehaviour
     }
     void Update()
     {
-        transform.Translate(velocity * speed * Time.deltaTime);
+        if (GameEngine.hitStop<=0)
+        {
+            transform.Translate(velocity * speed * Time.deltaTime);
+        }
     }
     public int projectileIndex = 0, bounceLvl;
     public string tagToHit = "Player";

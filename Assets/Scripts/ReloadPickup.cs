@@ -17,6 +17,7 @@ public class ReloadPickup : MonoBehaviour, IHittable
     private void OnEnable()
     {
         falling = true;
+        fallingTimer = .5f;
     }
     private void Start()
     {
@@ -61,8 +62,8 @@ public class ReloadPickup : MonoBehaviour, IHittable
     {
         if (collision.CompareTag("Player") && !falling)
         {
-            collision.GetComponent<Player>().Reload(numOfBullets, bulletArray);
-            collision.GetComponent<Player>().StartInvul(5f,15f);
+            GameEngine.gameEngine.mainCharacter.Reload(numOfBullets, bulletArray);
+            GameEngine.gameEngine.mainCharacter.StartInvul(5f,30f, Color.white);
             Destroy(gameObject);
         }
     }

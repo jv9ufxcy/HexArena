@@ -719,4 +719,35 @@ MonoBehaviour:
     Tile: {fileID: 11400000, guid: 962513fe4ebc230478744587bf074e9c, type: 2}
   - Position: {x: 2, y: 2, z: 0}
     Tile: {fileID: 11400000, guid: 962513fe4ebc230478744587bf074e9c, type: 2}
-  ItemTiles: []
+  ItemTiles:
+  - Position: {x: -4, y: -6, z: 0}
+    Tile: {fileID: 11400000, guid: c9436013b4d46514cb15f876d268ce6a, type: 2}
+  - Position: {x: 3, y: -3, z: 0}
+    Tile: {fileID: 11400000, guid: c9436013b4d46514cb15f876d268ce6a, type: 2}
+  - Position: {x: -4, y: 3, z: 0}
+    Tile: {fileID: 11400000, guid: c9436013b4d46514cb15f876d268ce6a, type: 2}
+  - Position: {x: 3, y: 6, z: 0}
+    Tile: {fileID: 11400000, guid: c9436013b4d46514cb15f876d268ce6a, type: 2}
+  PickupTiles:
+  - Position: {x: 4, y: -6, z: 0}
+    Tile: {fileID: 11400000, guid: 3687b37203aadcf46b6b7d4fa0c17139, type: 2}
+  - Position: {x: -5, y: -3, z: 0}
+    Tile: {fileID: 11400000, guid: 3687b37203aadcf46b6b7d4fa0c17139, type: 2}
+  - Position: {x: 4, y: 3, z: 0}
+    Tile: {fileID: 11400000, guid: 3687b37203aadcf46b6b7d4fa0c17139, type: 2}
+  - Position: {x: -5, y: 6, z: 0}
+    Tile: {fileID: 11400000, guid: 3687b37203aadcf46b6b7d4fa0c17139, type: 2}
+  DoorTiles:
+  - Position: {x: -2, y: -6, z: 0}
+    Tile: {fileID: 11400000, guid: cad873f03d2447342b4ac83da859656f, type: 2}
+  - Position: {x: -2, y: 4, z: 0}
+    Tile: {fileID: 11400000, guid: cad873f03d2447342b4ac83da859656f, type: 2}
+  PlayerTiles:
+  - Position: {x: 1, y: -6, z: 0}
+    Tile: {fileID: 11400000, guid: 72a97cfa4bbd5444aa4fedb0d05d5ea0, type: 2}
+  - Position: {x: -3, y: -3, z: 0}
+    Tile: {fileID: 11400000, guid: 72a97cfa4bbd5444aa4fedb0d05d5ea0, type: 2}
+  - Position: {x: 3, y: 0, z: 0}
+    Tile: {fileID: 11400000, guid: 72a97cfa4bbd5444aa4fedb0d05d5ea0, type: 2}
+  - Position: {x: -2, y: 6, z: 0}
+    Tile: {fileID: 11400000, guid: 72a97cfa4bbd5444aa4fedb0d05d5ea0, type: 2}
