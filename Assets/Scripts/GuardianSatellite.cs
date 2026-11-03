@@ -6,7 +6,7 @@ using UnityEngine.TextCore.Text;
 public class GuardianSatellite : MonoBehaviour
 {
     public GameObject queen;
-    [SerializeField]private float speed=4,angle,radius=1/*, lifeTime = 6*/;
+    [SerializeField]private float speed=4,angle,radius=1, force = 5.625f;
     [SerializeField] private int damage = 64;
 
     // Update is called once per frame
@@ -44,7 +44,7 @@ public class GuardianSatellite : MonoBehaviour
         Vector2 direction = (this.transform.position-other.transform.position).normalized;
         if (hit != null && other.gameObject != queen)
         {
-            hit.Hit(damage, 1, 0,direction);
+            hit.Hit(damage, 1, 0,direction, force);
         }
     }
 }

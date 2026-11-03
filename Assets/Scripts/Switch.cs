@@ -23,7 +23,7 @@ public class Switch : MonoBehaviour, IHittable
     {
         
     }
-    public void Hit(int dam, int effect, int bounceLvl, Vector2 dir)
+    public void Hit(int dam, int effect, int bounceLvl, Vector2 dir, float force)
     {
         if (!isActive)
         {

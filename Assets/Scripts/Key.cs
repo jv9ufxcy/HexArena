@@ -37,7 +37,7 @@ public class Key : MonoBehaviour
     }
     private void OnTriggerEnter2D(Collider2D collision)
     {
-        if (collision.CompareTag("Player") && !falling)
+        if (collision.CompareTag("Player") && !falling&&!GameEngine.gameEngine.mainCharacter.GetIsInvulnerable())
         {
             GameEngine.gameEngine.AddKey();
             GameEngine.SetHitPause(5f);

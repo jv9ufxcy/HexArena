@@ -8,6 +8,7 @@ public class Bullet : MonoBehaviour
     public int damage = 1;
     public float speed;
     public float rotation;
+    public float force;
     public bool canHitSelf = false;
     public float lifetime = 2f;
     private List<Collider2D> enemies = new List<Collider2D>();
@@ -34,7 +35,7 @@ public class Bullet : MonoBehaviour
         if (victim != null&&!enemies.Contains(other))
         {
             enemies.Add(other);
-            victim.Hit(damage, projectileIndex,bounceLvl, transform.up);
+            victim.Hit(damage, projectileIndex,bounceLvl, transform.up, force);
             Destroy(gameObject, .2f);
         }
     }

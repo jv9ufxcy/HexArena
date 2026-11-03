@@ -10,7 +10,7 @@ public class Surface : MonoBehaviour
     [SerializeField]
     [Range(0f, 5f)]
     private int spellEffectIndex=5;
-    [SerializeField] private float lifeTime = 3;
+    [SerializeField] private float lifeTime = 3, force = 5.625f;
     private bool damageTickActivate = false;
 
     private ParticleSystem ps;
@@ -73,7 +73,7 @@ public class Surface : MonoBehaviour
             switch (spellEffectIndex)
             {
                 default:
-                    hit.Hit(damageOverTime, (int)spellEffectIndex, 0, Vector2.zero/*direction*/);
+                    hit.Hit(damageOverTime, (int)spellEffectIndex, 0, Vector2.zero, force);
                     break;
             }
             damageTickActivate = false;

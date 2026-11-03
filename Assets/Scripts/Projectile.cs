@@ -10,7 +10,7 @@ public class Projectile : MonoBehaviour
     public float speed, bounceForce = 0.8f;
     [SerializeField]
     private int damage, bouncePower = 1;
-    [SerializeField] private float lifeTime = 2;
+    [SerializeField] private float lifeTime = 2, knockbackForce = 5.625f;
     private Vector2 target = new Vector2(), direction = new Vector2();
     [SerializeField] private float punchScaleDur = .125f;
     [SerializeField] private Vector3 punchScale = new Vector3(1.125f, 1.125f, 1);
@@ -83,36 +83,15 @@ public class Projectile : MonoBehaviour
         IHittable hit = other.GetComponent<IHittable>();
         if (hit != null)
         {
-            
+
             audioManager.PlaySound(hitSound);
-            switch (spellEffect)
+            hit.Hit(damage, (int)spellEffect, bouncePower, direction, knockbackForce);
+            if (spellEffect == Spell.Skewer)
             {
-                case Spell.Wound:
-                    hit.Hit(damage, (int)spellEffect, bouncePower, direction);
-                    break;
-                case Spell.Skewer:
-                    Physics2D.IgnoreCollision(other,GetComponent<Collider2D>(), true);
-                    hit.Hit(damage/**bouncePower*/, (int)spellEffect, bouncePower, direction);
-                    break;
-                case Spell.Guardian:
-                    hit.Hit(damage, (int)spellEffect, bouncePower, direction);
-                    EndLife();
-                    break;
-                case Spell.Frog:
-                    hit.Hit(damage, (int)spellEffect, bouncePower, direction);
-                    EndLife();
-                    break;
-                case Spell.Freeze:
-                    hit.Hit(damage, (int)spellEffect, bouncePower, direction);
-                    EndLife();
-                    break;
-                case Spell.Explosion:
-                    hit.Hit(damage, (int)spellEffect, bouncePower, direction);
-                    EndLife();
-                    break;
-                default:
-                    break;
+                Physics2D.IgnoreCollision(other, GetComponent<Collider2D>(), true);
             }
+            else
+            { EndLife(); }
         }
 
     }
@@ -121,6 +100,7 @@ public class Projectile : MonoBehaviour
     private void EndLife()
     {
         transform.DOComplete();
+        transform.localScale = Vector3.one;
         //transform.DOScale(Vector3.one, 0);
         switch (bouncePower)
         {

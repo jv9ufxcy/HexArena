@@ -1,10 +1,12 @@
-﻿using System;
+﻿using DG.Tweening;
+using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Reflection;
 using TMPro;
 using UnityEngine;
 using UnityEngine.Events;
-using DG.Tweening;
+using UnityEngine.UIElements;
 
 
 public class GameEngine : MonoBehaviour
@@ -26,6 +28,7 @@ public class GameEngine : MonoBehaviour
     public Player mainCharacter;
 
     public GameObject[] globalPrefabs;
+    public List<GameObject> pickupList = new List<GameObject>();
     public GameObject mobileHUD;
 
     public Transform DamagePopup;
@@ -39,6 +42,7 @@ public class GameEngine : MonoBehaviour
     private const float tickTimerMax = 1f;
     public static event EventHandler<OnTickEventArgs> OnTick;
     private CinemachineShake cineShake;
+    private AudioManager audioManager;
     // Use this for initialization
     void Awake ()
     {
@@ -47,6 +51,7 @@ public class GameEngine : MonoBehaviour
     private void Start()
     {
         mobileHUD.SetActive(Application.isMobilePlatform);
+        audioManager=AudioManager.instance;
         cineShake = Camera.main.GetComponent<CinemachineShake>();
         timerColor = timerText.color;
         timerText.gameObject.SetActive(false);
@@ -71,10 +76,14 @@ public class GameEngine : MonoBehaviour
         }
         foreach (Vector3 pos in tilemapManager.pickupPositions)
         {
-            GlobalPrefab(11, pos);
+            GameObject nextPrefab = Instantiate(globalPrefabs[11], pos, Quaternion.identity);
+            pickupList.Add(nextPrefab);
         }
         int rand = UnityEngine.Random.Range(0, tilemapManager.playerPositions.Count);
-        mainCharacter.transform.position = tilemapManager.playerPositions[rand];
+        mainCharacter.StartInvul(5,60,Color.white);
+        mainCharacter.transform.DOLocalMoveY(32,0);
+        mainCharacter.transform.DOLocalMoveX(tilemapManager.playerPositions[rand].x,0);
+        mainCharacter.transform.DOLocalMove(tilemapManager.playerPositions[rand], 1);
     }
 
     private void IncrementNextLevel()
@@ -97,10 +106,15 @@ public class GameEngine : MonoBehaviour
         PauseTimer();
         spawner.EndWaves();
         mainCharacter.ApplyStun();
-        mainCharacter.StartInvul(60f, 120f, Color.white);
+        mainCharacter.StartInvul(5f, 120f, Color.white);
+        mainCharacter.transform.DOMoveY(32f, 1).SetDelay(0.5f);
         yield return new WaitForSeconds(1f);
         Destroy(door);
-
+        foreach (GameObject go in pickupList) 
+        {
+            Destroy(go);
+        }
+        pickupList.Clear();
         IncrementNextLevel();
         yield return new WaitForSeconds(1f);
         PopulateLevel();
@@ -200,6 +214,7 @@ public class GameEngine : MonoBehaviour
     [SerializeField] private int keyCount;
     public void AddKey()
     {
+        
         keyCount++;
         if (keyCount>=4)
         {

@@ -118,21 +118,22 @@ public class Enemy : MonoBehaviour,IHittable
         
         spriteRend.transform.DOShakePosition(0.125f, 1, 7, 120);
         StartCoroutine(FlashWhiteDamage(5));
-        GameEngine.SetHitPause(4);
+        GameEngine.SetHitPause(4*damage);
         
         stunTimer = .5f;
         eState = EnemyState.stunned;
     }
 
-    public void Hit(int dam, int effect,int bounceLvl, Vector2 dir)
+    public void Hit(int dam, int effect,int bounceLvl, Vector2 dir, float force)
     {
-        if (dam > 0)
-        {
+        //if (dam > 0)
+        //{
             DeSpell();
             DoDamage(dam);
-            velocity = CardinalDir(dir) * 5.625f;
-        }
+            velocity = CardinalDir(dir) * force;
+        //}
         SpellEffect(effect, bounceLvl);
+        attackState = AttackingState.standby;
         //DamagePopup.Create(transform.position, dam, bounceLvl);
     }
     void SpellEffect(int effect,int level)
@@ -207,13 +208,18 @@ public class Enemy : MonoBehaviour,IHittable
                     velocity = Vector2.zero;
                     break;
                 case EnemyState.stunned:
-                    velocity = Vector2.zero;
+                    
                     if (stunTimer > 0)
                     {
+                        Vector2 scale = new Vector2(0.99f, 0.99f);
+                        velocity.Scale(scale);
                         stunTimer -= Time.deltaTime;
                     }
                     else
+                    {
+                        velocity = Vector2.zero;
                         DeSpell();
+                    }
                     break;
                 default:
                     break;
@@ -269,7 +275,7 @@ public class Enemy : MonoBehaviour,IHittable
                 guardiansCreated.Clear();
             }
             PlaySound(deathBark);
-            velocity = Vector2.zero;
+            velocity.Scale(Vector2.zero);
             eState=EnemyState.neutral;
             shotTimer = startTimeBtwShots;
             StartCoroutine(EnemyDeath(shakeDuration, shakeStrength, blinkDuration, hitFreezeFrames));
@@ -281,7 +287,7 @@ public class Enemy : MonoBehaviour,IHittable
         int hitPause = hitFreezeFrames;
         float waitFramesToSeconds = hitPause / 60;//over 60 frames
         GameEngine.SetHitPause(hitPause);
-
+        velocity.Scale(Vector2.one);
         yield return new WaitForSeconds(waitFramesToSeconds / 2);//start shaking halfway into
         ShakeSprite(shakeDur, shakeStr, 10, 90);
         StartCoroutine(BlinkColor(blinkDur));//blink for 5 frames
@@ -292,7 +298,7 @@ public class Enemy : MonoBehaviour,IHittable
         HealthChance();
         if (eType == EnemyType.bomber)
         {
-            GameObject hit = Instantiate(projectileObject, transform.position + (Vector3)CardinalDir(direction.normalized), projectileFirePoint.rotation);
+            GameObject hit = Instantiate(projectileObject, Round2HalfPoint(transform.position) + (Vector3)CardinalDir(direction.normalized), projectileFirePoint.rotation);
         }
         gameObject.SetActive(false);
     }
@@ -313,7 +319,7 @@ public class Enemy : MonoBehaviour,IHittable
         float healthOverMax = playerChar.MaxHealth / Mathf.Clamp(playerChar.CurHealth, baseHPDropChance, playerChar.MaxHealth);
         int dropRate = Mathf.RoundToInt(baseHPDropChance * healthOverMax);
         int randomChance = UnityEngine.Random.Range(0,100);
-        Debug.Log("DropRate: "+dropRate+ "RandomChance: "+randomChance);
+        //Debug.Log("DropRate: "+dropRate+ "RandomChance: "+randomChance);
         if (randomChance<=dropRate)
         {
             GameEngine.GlobalPrefab(6, this.gameObject);
@@ -402,8 +408,9 @@ public class Enemy : MonoBehaviour,IHittable
 
     private void GetDirectionOfPlayer()
     {
-        Vector2 target = player.transform.position;
-        direction = new Vector2(target.x - transform.position.x, target.y - transform.position.y).normalized;
+        Vector2 target = Round2HalfPoint(player.transform.position);
+        Vector3 position = Round2HalfPoint(transform.position);
+        direction = new Vector2(target.x - position.x, target.y - position.y).normalized;
     }
 
     private void ChargeAttack()
@@ -428,7 +435,7 @@ public class Enemy : MonoBehaviour,IHittable
                         AttackAnim();
                         velocity = CardinalDir(direction) * chargeSpeed;
                         //spawn hitbox
-                        GameObject hit = Instantiate(projectileObject, transform.position + (Vector3)direction.normalized, projectileFirePoint.rotation, this.transform);
+                        GameObject hit = Instantiate(projectileObject, Round2HalfPoint(transform.position) + (Vector3)direction.normalized, projectileFirePoint.rotation, this.transform);
                         hit.GetComponent<Projectile>().ChangeDirection(direction);
                         hit.GetComponent<Projectile>().ChangeOwner(this.gameObject);
                         //bulletFX
@@ -489,12 +496,13 @@ public class Enemy : MonoBehaviour,IHittable
     [SerializeField]private float actionCooldown = 3;
     private void Movement()
     {
-        float distanceFromPlayer = Vector2.Distance(playerTarget.position, transform.position);
+        float distanceFromPlayer = Vector2.Distance(Round2HalfPoint(playerTarget.position), Round2HalfPoint(transform.position));
 
         if (distanceFromPlayer > stoppingDistance)//follow Player
         {
-            Vector2 target = playerTarget.transform.position;
-            direction = new Vector2(target.x - transform.position.x, target.y - transform.position.y).normalized;
+            Vector2 target = Round2HalfPoint(playerTarget.transform.position);
+            Vector3 position = Round2HalfPoint(transform.position);
+            direction = new Vector2(target.x - position.x, target.y - position.y).normalized;
             velocity = CardinalDir(direction) * speed;
         }
         else//attack
@@ -515,8 +523,8 @@ public class Enemy : MonoBehaviour,IHittable
         {
             if (shotTimer <= 0)
             {
-                GameObject proj = Instantiate(projectileObject, projectileFirePoint.position, Quaternion.identity);
-                proj.GetComponent<Projectile>().ChangeTarget(player.position, gameObject);
+                GameObject proj = Instantiate(projectileObject, Round2HalfPoint(projectileFirePoint.position), Quaternion.identity);
+                proj.GetComponent<Projectile>().ChangeTarget(Round2HalfPoint(player.position), gameObject);
                 PlaySound(attackBark);
                 shotTimer = startTimeBtwShots;
                 ScreenShake(.5f, .25f);
@@ -618,7 +626,7 @@ public class Enemy : MonoBehaviour,IHittable
     private void FireArrow(float bulletResource, float numberOfBullets, float speed)
     {
         var other = GameEngine.gameEngine.mainCharacter.transform;
-        Vector3 dir = other.transform.position - transform.position;
+        Vector3 dir = Round2HalfPoint(other.transform.position - transform.position);
         dir = other.transform.InverseTransformDirection(dir);
         float angle = Mathf.Round(Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg);
         //minRot = hitbox.transform.parent.transform.localEulerAngles.z-minRot;
@@ -655,7 +663,7 @@ public class Enemy : MonoBehaviour,IHittable
         GameObject[] spawnedBullets = new GameObject[numberOfBullets];
         for (int i = 0; i < numberOfBullets; i++)
         {
-            spawnedBullets[i] = Instantiate(magicObjects[bulletResource], transform.position, Quaternion.identity);
+            spawnedBullets[i] = Instantiate(magicObjects[bulletResource], Round2HalfPoint(transform.position), Quaternion.identity);
 
             var b = spawnedBullets[i].GetComponent<Bullet>();
             b.rotation = rotations[i];
@@ -674,5 +682,12 @@ public class Enemy : MonoBehaviour,IHittable
         //int octant = Mathf.RoundToInt(45 * angle / (2 * Mathf.PI) + 45) % 45;
         Vector2 snappedVector = new Vector2(Mathf.Cos(snap) * hypotenuse, Mathf.Sin(snap) * hypotenuse);
         return snappedVector;
+    }
+    public static Vector3 Round2HalfPoint(Vector3 vector)
+    {
+        float x = Mathf.Round(vector.x * 2) / 2;
+        float y = Mathf.Round(vector.y * 2) / 2;
+        float z = Mathf.Round(vector.z * 2) / 2;
+        return new Vector3(x, y, z);
     }
 }

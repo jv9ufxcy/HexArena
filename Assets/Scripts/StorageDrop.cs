@@ -15,7 +15,7 @@ public class StorageDrop : MonoBehaviour,IHittable
         }
     }
 
-    public void Hit(int dam, int effect, int bounceLvl, Vector2 dir)
+    public void Hit(int dam, int effect, int bounceLvl, Vector2 dir, float force)
     {
         DropItemChance(baseDropChance);
         GameEngine.GlobalPrefab(1, this.gameObject);
@@ -23,7 +23,7 @@ public class StorageDrop : MonoBehaviour,IHittable
     }
     private void OnTriggerEnter2D(Collider2D collision)
     {
-        if (collision.CompareTag("Player"))
+        if (collision.CompareTag("Player")&& !GameEngine.gameEngine.mainCharacter.GetIsInvulnerable())
         {
             DropItemChance(baseDropChance);
             GameEngine.GlobalPrefab(1, this.gameObject);

@@ -85,7 +85,7 @@ public class ReloadPickup : MonoBehaviour, IHittable
         int rand = Random.Range(0, 5);
         ChangeAmmo(rand);
     }
-    public void Hit(int dam, int effect, int bounceLvl, Vector2 dir)
+    public void Hit(int dam, int effect, int bounceLvl, Vector2 dir, float force)
     {
         ChangeAmmo(effect);
         ammoTimer=ammoTimerMax*2;

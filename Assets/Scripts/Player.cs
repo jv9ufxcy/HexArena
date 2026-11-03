@@ -39,6 +39,7 @@ public class Player : MonoBehaviour,IHittable
     [SerializeField] private float trajectoryMaxLength = 12f;
     [SerializeField] private int reflections = 3;
     [SerializeField] private LayerMask target;
+    [SerializeField] private float bumpForce = 5.625f;
     [Header("Ammo")]
     [Range(0, 5)]
     public List<int> gunChamber = new List<int> { 5, 5, 5, 1, 3, 1 };
@@ -47,6 +48,7 @@ public class Player : MonoBehaviour,IHittable
     [Header("Spell Effects")]
     private float stunTimer, guardianTimer, fireRate;
     [SerializeField] private GameObject[] magicObjects;
+    [SerializeField] private LayerMask targetLayer;
     private enum PlayerState { neutral, frozen,frog,firing,stunned,dead}
     [SerializeField]private PlayerState state;
     [Header("SoundEffects")]
@@ -158,7 +160,14 @@ public class Player : MonoBehaviour,IHittable
             }
         }
     }
-    private void FixedUpdate()
+    private void OnDrawGizmos()
+    {
+        Vector3 forward = CardinalDir(moveAxis.normalized) * 1;
+        Gizmos.color = Color.red;
+        Debug.DrawRay(transform.position, forward, Color.red);
+    }
+
+private void FixedUpdate()
     {
         if (GameEngine.hitStop <= 0)
         {
@@ -166,7 +175,10 @@ public class Player : MonoBehaviour,IHittable
             {
                 case PlayerState.neutral:
                     if (move.ReadValue<Vector2>() != Vector2.zero)
+                    {
                         velocity = CardinalDir(moveAxis.normalized) * moveSpeed;
+                        BumpCombat();
+                    }
                     break;
                 case PlayerState.frozen:
                     if (stunTimer > 0)
@@ -224,6 +236,23 @@ public class Player : MonoBehaviour,IHittable
             }
         }
     }
+
+    private void BumpCombat()
+    {
+        //var ray = new Ray(this.transform.position, CardinalDir(moveAxis.normalized));
+        RaycastHit2D hitEnemy = Physics2D.Raycast(this.transform.position, CardinalDir(moveAxis.normalized), 1.25f, targetLayer);
+        if (hitEnemy)
+        {
+            Enemy enemy = hitEnemy.transform.GetComponent<Enemy>();
+            enemy.Hit(0, 1, 0, CardinalDir(moveAxis.normalized),bumpForce);
+            fireRate = .25f;
+            state = PlayerState.firing;
+            gunObject.transform.DOComplete();
+            gunObject.transform.DOPunchPosition(CardinalDir(moveAxis.normalized), shootRecovery);
+            Debug.Log("Hit");
+        }
+    }
+
     private void OrbitTarget()
     {
         float x = Mathf.Cos(orbFreq * Time.time) * orbAmp*1.5f;
@@ -247,7 +276,7 @@ public class Player : MonoBehaviour,IHittable
                 pos = hit2D.point;
                 dir = Vector3.Reflect(dir, hit2D.normal);
                 trajectoryLine.positionCount += 1;
-                trajectoryLine.SetPosition(trajectoryLine.positionCount - 1, hit2D.point);
+                trajectoryLine.SetPosition(trajectoryLine.positionCount - 1, Round2HalfPoint(hit2D.point));
                 //ray2D = new Ray2D(hit2D.point, Vector3.Reflect(ray2D.direction, hit2D.normal));
 
                 //if (hit2D.collider.tag != "Ground")
@@ -297,7 +326,7 @@ public class Player : MonoBehaviour,IHittable
             uiScript.AmmoUpdate(gunChamber);
             currentBullet = 0;
         }
-        gunObject.DOPunchRotation(new Vector3(0, 0, 361), .25f);
+        gunObject.transform.DOPunchRotation(new Vector3(0, 0, 361), .25f);
         PlaySound(reloadBark);
     }
     private void RotateWeapon(Vector2 rotAxis)
@@ -315,10 +344,10 @@ public class Player : MonoBehaviour,IHittable
         if (aniMoveSpeed > 1)
         {
             float yPos = Mathf.Sin(Time.time * yFrq) * yAmp;
-            spriteRend.gameObject.transform.localPosition = new Vector3(0, yPos, 0);
+            spriteRend.gameObject.transform.localPosition = new Vector3(0, 0.5f+ yPos, 0);
         }
-        else
-            spriteRend.gameObject.transform.localPosition = Vector3.zero;
+        //else
+        //    spriteRend.gameObject.transform.localPosition = Vector3.zero;
         
         //gunObject.transform.localScale = new Vector3(direction, direction, 1f);
 
@@ -362,10 +391,10 @@ public class Player : MonoBehaviour,IHittable
                     gunObject.transform.DOScale(Vector3.one, 0);
                     //weaponOffset.transform.DORotate(Vector3.one, 0);
                     //spawn bullet and remove from inventory
-                    GameObject proj = Instantiate(bullets[gunChamber[0]], firingPoint.transform.position, gunObject.rotation);
+                    GameObject proj = Instantiate(bullets[gunChamber[0]], Round2HalfPoint(firingPoint.transform.position), gunObject.rotation);
                     gunChamber.RemoveAt(0);
                     //punch gun
-                    gunObject.DOPunchRotation(new Vector3(0, 0, 60f), shootRecovery);
+                    gunObject.transform.DOPunchRotation(new Vector3(0, 0, 60f), shootRecovery);
                     Vector3 punchScale = new Vector3(1.025f, 1.025f, 1);
                     gunObject.transform.DOPunchScale(punchScale, .25f,2,shootRecovery);
                     //set bulletDirection
@@ -429,7 +458,7 @@ public class Player : MonoBehaviour,IHittable
 
     }
 
-    public void Hit(int dam,int effect,int bounceLvl, Vector2 dir)
+    public void Hit(int dam,int effect,int bounceLvl, Vector2 dir, float force)
     {
         if (isInvulnerable)
             return;
@@ -437,7 +466,7 @@ public class Player : MonoBehaviour,IHittable
         if (dam>0)
         {
             DoDamage(dam);
-            velocity = dir * moveSpeed;
+            velocity = dir * force ;
             PlaySound(hurtBark);
         }
         SpellEffect(effect, bounceLvl);
@@ -584,5 +613,12 @@ public class Player : MonoBehaviour,IHittable
         //int octant = Mathf.RoundToInt(45 * angle / (2 * Mathf.PI) + 45) % 45;
             Vector2 snappedVector = new Vector2(Mathf.Cos(snap)*hypotenuse,Mathf.Sin(snap)*hypotenuse);
         return snappedVector;
+    }
+    public static Vector3 Round2HalfPoint(Vector3 vector)
+    {
+        float x = Mathf.Round(vector.x * 2)/2;
+        float y = Mathf.Round(vector.y * 2)/2;
+        float z = Mathf.Round(vector.z * 2)/2;
+        return new Vector3(x,y,z);
     }
 }
