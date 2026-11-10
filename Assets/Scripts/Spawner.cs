@@ -4,6 +4,7 @@ using UnityEngine;
 using Hex.ObjectPooling;
 using System;
 using DG.Tweening;
+using TMPro;
 
 [Serializable]
 public class EnemyDictionary
@@ -29,8 +30,9 @@ public class Spawner : MonoBehaviour
     private enum spawnerType { Encounter, Arena }
     [SerializeField] private spawnerType spawnerMode;
 
+    //[SerializeField]private TextMeshPro waveText, waveTimeText;
     [SerializeField]private int waveDuration;
-    private float waveTimer;
+    private float waveTimer, waveTimerRate = 1f, emptyWaveRate = 1.6f, defaultWaveRate = 1f;
     private List<GameObject> spawnedEnemies = new List<GameObject>();
     [SerializeField] private int waveValue, currentWave;
     [Header("Object Pool")]
@@ -87,7 +89,14 @@ public class Spawner : MonoBehaviour
     {
         canSpawn = true;
         waveTimer = waveStartDelay;
-        StartCoroutine(StartWaves());
+        //StartCoroutine(StartWaves());
+        battleState = spawnState.Active;
+    }
+    public void RestartSpawner()
+    {
+        canSpawn = true;
+        waveTimer = waveStartDelay;
+        currentWave = 0;
         battleState = spawnState.Active;
     }
     private void OnTriggerExit2D(Collider2D collision)
@@ -104,17 +113,9 @@ public class Spawner : MonoBehaviour
     {
         if (battleState==spawnState.Active)
         {
-            if (waveTimer > 0)
-            {
-                waveTimer -= Time.deltaTime;
-            }
-            else
-            {
-                //int random = UnityEngine.Random.Range(0, 4);
-                //Vector3 position = GetRandomTransform().position;
-                //SummonEnemy(random,position);
-                waveTimer = waveDuration;
-            }
+            StartWaves();
+            //int seconds = Mathf.FloorToInt(waveTimer % 60);
+            //waveText.SetText(seconds.ToString());
         }
     }
     private void SummonEnemy(int enemyIndex,Vector3 pos)
@@ -149,27 +150,35 @@ public class Spawner : MonoBehaviour
         spawn.parent = this;
         
     }
-    IEnumerator StartWaves()
+    void StartWaves()
     {
-        yield return new WaitForSeconds(waveStartDelay);
-        //bState = battleState.active;
-        for (currentWave = 0; currentWave < waves.Count; currentWave++)
+        if (waveTimer <= 0)
         {
-            pointsClaimedPerWave.Clear();//clear our list of points grabbed
-            for (int i = 0; i < waves[currentWave].EnemiesInWave.Count; i++)//Go through our list of enemies and spawn each one
+            if (currentWave < waves.Count)
             {
-                //grab the prefab of that enemy based on the enum type
-                int spawnIndex = (int)waves[currentWave].EnemiesInWave[i].enemyIndex;//get enum index
-                for (int a = 0; a < waves[currentWave].EnemiesInWave[i].NumToSpawn; a++)//spawn as many of that enemy as we need
+                pointsClaimedPerWave.Clear();//clear our list of points grabbed
+                for (int i = 0; i < waves[currentWave].EnemiesInWave.Count; i++)//Go through our list of enemies and spawn each one
                 {
-                    Vector3 t = GetRandomPosition();
-                    SummonEnemy(spawnIndex, t);
-                    GameEngine.GlobalPrefab(5, t);//drop shadow
+                    //grab the prefab of that enemy based on the enum type
+                    int spawnIndex = (int)waves[currentWave].EnemiesInWave[i].enemyIndex;//get enum index
+                    for (int a = 0; a < waves[currentWave].EnemiesInWave[i].NumToSpawn; a++)//spawn as many of that enemy as we need
+                    {
+                        Vector3 t = GetRandomPosition();
+                        SummonEnemy(spawnIndex, t);
+                        GameEngine.GlobalPrefab(5, t);//drop shadow
+                    }
                 }
+                currentWave++;
+                waveTimer = waves[currentWave].waveDuration;
             }
-            yield return new WaitForSeconds(waves[currentWave].waveDuration);
         }
-        EndWaves();
+        else
+            waveTimer -= Time.deltaTime*waveTimerRate;
+        if (currentWave >= waves.Count)
+        {
+            EndWaves();
+        }
+        
     }
 
     Vector3 GetRandomPosition()//returns a random transform from the list given
@@ -178,9 +187,15 @@ public class Spawner : MonoBehaviour
 
         if (pointsClaimedPerWave.Contains(possibleSpawnPoints[rand]))//if the point we chose matches one that was already chosen, 
             GetRandomPosition();//recursion! Choose another point
-        else
-            pointsClaimedPerWave.Add(possibleSpawnPoints[rand]);//if it's good, we add it to the list and continue
-
+        else//if it's good, we add it to the list and continue
+        {
+            if (possibleSpawnPoints[rand] == Vector3.zero)
+            {
+                GetRandomPosition();
+            }
+            else
+                pointsClaimedPerWave.Add(possibleSpawnPoints[rand]); 
+        }
         return possibleSpawnPoints[rand];
 
         //return possibleSpawnPoints[i];
@@ -193,10 +208,16 @@ public class Spawner : MonoBehaviour
         }
         if (battleState == spawnState.Active)
         {
-            if (!canSpawn && spawnedEnemies.Count <= 0)
+            if (spawnedEnemies.Count <= 0)
             {
-                battleState = spawnState.Conclusion;
+                waveTimerRate = emptyWaveRate;
+                if (!canSpawn)
+                {
+                    battleState = spawnState.Conclusion;
+                }
             }
+            else
+                waveTimerRate = defaultWaveRate;
         }
     }
     public void EndWaves()
@@ -208,8 +229,9 @@ public class Spawner : MonoBehaviour
             enemy.DeSpawn();
         }
         canSpawn = false;
-        waveTimer = 2;
+        waveTimer = waveStartDelay;
         currentWave = 0;
+        //waveText.SetText(currentWave.ToString());
         battleState = spawnState.Conclusion;
     }
     //[System.Serializable]

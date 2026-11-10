@@ -229,6 +229,7 @@ MonoBehaviour:
   active: 1
   maxHealth: 1
   speed: 1.875
+  chargeSpeed: 24
   stoppingDistance: 5
   retreatDistance: 7
   projectileObject: {fileID: 6514229213537963326, guid: 3a3e1450e248e09419e3e0b4f7d77963, type: 3}
@@ -252,9 +253,10 @@ MonoBehaviour:
   invulFlickerRate: 4
   attackState: 0
   numOfAttacks: 1
-  chargeSpeed: 24
   curAtkNum: 0
+  attackAngle: 45
   actionCooldown: 1.5
+  movementAngle: 45
   aniMoveSpeed: 0
   yAmp: 0.1
   yFrq: 24

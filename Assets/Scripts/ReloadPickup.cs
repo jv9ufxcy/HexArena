@@ -16,9 +16,20 @@ public class ReloadPickup : MonoBehaviour, IHittable
     private float fallingTimer = .5f;
     private void OnEnable()
     {
+        if (!GameEngine.gameEngine.pickupObj.Contains(gameObject))
+        {
+            GameEngine.gameEngine.AddPickup(gameObject, true);
+        }
         falling = true;
         fallingTimer = .5f;
     }
+    //private void OnDisable()
+    //{
+    //    if (GameEngine.gameEngine.pickupObj.Contains(gameObject))
+    //    {
+    //        GameEngine.gameEngine.AddPickup(gameObject, false);
+    //    }
+    //}
     private void Start()
     {
         spriteVisual = GetComponentInChildren<SpriteRenderer>();
@@ -64,6 +75,10 @@ public class ReloadPickup : MonoBehaviour, IHittable
         {
             GameEngine.gameEngine.mainCharacter.Reload(numOfBullets, bulletArray);
             GameEngine.gameEngine.mainCharacter.StartInvul(5f,30f, Color.white);
+            if (GameEngine.gameEngine.pickupObj.Contains(gameObject))
+            {
+                GameEngine.gameEngine.pickupObj.Remove(gameObject);
+            }
             Destroy(gameObject);
         }
     }

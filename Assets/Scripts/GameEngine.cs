@@ -22,13 +22,13 @@ public class GameEngine : MonoBehaviour
     [SerializeField] private float remainingTime = 15f;
     private float elapsedTime = 0f;
     private bool countDown = false;
-    [SerializeField] TextMeshPro timerText;
+    [SerializeField] TextMeshPro timerText, scoreText;
     private Color timerColor;
     [Header("GameObjects")]
     public Player mainCharacter;
 
     public GameObject[] globalPrefabs;
-    public List<GameObject> pickupList = new List<GameObject>();
+    public List<GameObject> pickupCrateList = new List<GameObject>();
     public GameObject mobileHUD;
 
     public Transform DamagePopup;
@@ -36,7 +36,7 @@ public class GameEngine : MonoBehaviour
     public Spawner spawner;
     public TilemapManager tilemapManager;
     [SerializeField]private List<int> levels = new List<int>();
-    private int levelIndex = 0;
+    private int levelIndex = 0, loopIndex = 0;
     private int tick;
     private float tickTimer;
     private const float tickTimerMax = 1f;
@@ -62,7 +62,7 @@ public class GameEngine : MonoBehaviour
     {
         SetRemainingTime(60);
         IncrementNextLevel();
-
+        audioManager.StartBGM();
         spawner.possibleSpawnPoints = new List<Vector3>(tilemapManager.monsterPositions);
         spawner.ActivateSpawner();
         PopulateLevel();
@@ -77,7 +77,7 @@ public class GameEngine : MonoBehaviour
         foreach (Vector3 pos in tilemapManager.pickupPositions)
         {
             GameObject nextPrefab = Instantiate(globalPrefabs[11], pos, Quaternion.identity);
-            pickupList.Add(nextPrefab);
+            pickupCrateList.Add(nextPrefab);
         }
         int rand = UnityEngine.Random.Range(0, tilemapManager.playerPositions.Count);
         mainCharacter.StartInvul(5,60,Color.white);
@@ -93,7 +93,9 @@ public class GameEngine : MonoBehaviour
         if (levelIndex >= levels.Count)
         {
             levelIndex = 0;
+            loopIndex++;
         }
+        scoreText.SetText(loopIndex.ToString() + "-" + levelIndex.ToString());
     }
 
     public void NextLevel(GameObject door)
@@ -104,24 +106,47 @@ public class GameEngine : MonoBehaviour
     {
         mainCharacter.DoHeal(1);
         PauseTimer();
-        spawner.EndWaves();
+        mainCharacter.DeSpell();
+        mainCharacter.EndGuardians();
         mainCharacter.ApplyStun();
         mainCharacter.StartInvul(5f, 120f, Color.white);
         mainCharacter.transform.DOMoveY(32f, 1).SetDelay(0.5f);
         yield return new WaitForSeconds(1f);
+
+        spawner.EndWaves();
+        ResetPickups();
         Destroy(door);
-        foreach (GameObject go in pickupList) 
+        foreach (GameObject go in pickupCrateList) 
         {
             Destroy(go);
         }
-        pickupList.Clear();
+        pickupCrateList.Clear();
+        tilemapManager.ClearMap();
         IncrementNextLevel();
         yield return new WaitForSeconds(1f);
+
         PopulateLevel();
         spawner.possibleSpawnPoints = new List<Vector3>(tilemapManager.monsterPositions);
-        spawner.ActivateSpawner();
+        spawner.RestartSpawner();
         SetRemainingTime(60);
 
+    }
+    public List<GameObject> pickupObj = new List<GameObject>();
+    public void AddPickup(GameObject go, bool add)
+    {
+        if (add)
+            pickupObj.Add(go);
+        else
+            pickupObj.Remove(go);
+    }
+    private void ResetPickups()
+    {
+        foreach (GameObject item in pickupObj)
+        {
+            item.SetActive(false);
+            //Destroy(item);
+        }
+        pickupObj.Clear();
     }
     private void FailLevel()
     {

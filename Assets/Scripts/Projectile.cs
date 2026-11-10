@@ -29,6 +29,20 @@ public class Projectile : MonoBehaviour
         ps = GetComponent<ParticleSystem>();
         sr = GetComponentInChildren<SpriteRenderer>();
     }
+    private void OnDestroy()
+    {
+        if (owner != null)
+        {
+            Enemy enemy = owner.GetComponent<Enemy>();
+            if (enemy)
+            {
+                if (enemy.projectilesInScene.Contains(this))
+                {
+                    enemy.projectilesInScene.Remove(this);
+                }
+            }
+        }
+    }
     // Start is called before the first frame update
     void Start()
     {
@@ -117,7 +131,17 @@ public class Projectile : MonoBehaviour
                 GameEngine.GlobalPrefab(bulletEffect, this.gameObject);
                 break;
         }
-        
+        if (owner != null)
+        {
+            Enemy enemy = owner.GetComponent<Enemy>();
+            if (enemy)
+            {
+                if (enemy.projectilesInScene.Contains(this))
+                {
+                    enemy.projectilesInScene.Remove(this);
+                }
+            }
+        }
         Destroy(gameObject);
     }
 
@@ -146,8 +170,8 @@ public class Projectile : MonoBehaviour
 
     private void BounceEffect()
     {
-        this.transform.DOComplete();
-        this.transform.DOPunchScale(punchScale / 2, .125f);
+        sr.transform.DOComplete();
+        sr.transform.DOPunchScale(punchScale / 2, punchScaleDur);
         var emission = ps.emission;
         if (ps!=null)
         {

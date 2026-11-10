@@ -12,8 +12,19 @@ public class HealthPickup : MonoBehaviour
     private float fallingTimer = .5f;
     private void OnEnable()
     {
+        if (!GameEngine.gameEngine.pickupObj.Contains(gameObject))
+        {
+            GameEngine.gameEngine.AddPickup(gameObject, true);
+        }
         falling = true;
     }
+    //private void OnDisable()
+    //{
+    //    if (GameEngine.gameEngine.pickupObj.Contains(gameObject))
+    //    {
+    //        GameEngine.gameEngine.AddPickup(gameObject, false);
+    //    }
+    //}
     private void Start()
     {
         spriteVisual=GetComponentInChildren<SpriteRenderer>();
@@ -42,6 +53,10 @@ public class HealthPickup : MonoBehaviour
         {
             GameEngine.gameEngine.mainCharacter.DoHeal(healAmt);
             GameEngine.gameEngine.mainCharacter.StartInvul(5f, 30f, Color.white);
+            if (GameEngine.gameEngine.pickupObj.Contains(gameObject))
+            {
+                GameEngine.gameEngine.AddPickup(gameObject,false);
+            }
             Destroy(gameObject);
         }
     }

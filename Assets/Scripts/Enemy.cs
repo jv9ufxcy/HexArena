@@ -35,6 +35,7 @@ public class Enemy : MonoBehaviour,IHittable
     [Header("Shooting")]
     [SerializeField]
     private GameObject projectileObject;
+    public List<Projectile> projectilesInScene = new List<Projectile>();
     [SerializeField] private Transform projectileFirePoint;
     [SerializeField]
     private float startTimeBtwShots;
@@ -130,7 +131,7 @@ public class Enemy : MonoBehaviour,IHittable
         //{
             DeSpell();
             DoDamage(dam);
-            velocity = CardinalDir(dir) * force;
+            velocity = CardinalDir(dir, 45) * force;
         //}
         SpellEffect(effect, bounceLvl);
         attackState = AttackingState.standby;
@@ -288,6 +289,21 @@ public class Enemy : MonoBehaviour,IHittable
         float waitFramesToSeconds = hitPause / 60;//over 60 frames
         GameEngine.SetHitPause(hitPause);
         velocity.Scale(Vector2.one);
+        if (eType == EnemyType.bomber)
+        {
+            velocity = Vector2.zero;
+        }
+        if (projectilesInScene.Count>0)
+        {
+            foreach (Projectile item in projectilesInScene)
+            {
+                if (item.gameObject!=null)
+                {
+                    Destroy(item.gameObject);
+                }
+            }
+        }
+        projectilesInScene.Clear();
         yield return new WaitForSeconds(waitFramesToSeconds / 2);//start shaking halfway into
         ShakeSprite(shakeDur, shakeStr, 10, 90);
         StartCoroutine(BlinkColor(blinkDur));//blink for 5 frames
@@ -298,7 +314,7 @@ public class Enemy : MonoBehaviour,IHittable
         HealthChance();
         if (eType == EnemyType.bomber)
         {
-            GameObject hit = Instantiate(projectileObject, Round2HalfPoint(transform.position) + (Vector3)CardinalDir(direction.normalized), projectileFirePoint.rotation);
+            GameObject hit = Instantiate(projectileObject, Round2HalfPoint(transform.position) + (Vector3)CardinalDir(direction.normalized, 45), projectileFirePoint.rotation);
         }
         gameObject.SetActive(false);
     }
@@ -350,6 +366,7 @@ public class Enemy : MonoBehaviour,IHittable
     private enum AttackingState { standby,attack, recover,}
     [SerializeField]private AttackingState attackState;
     [SerializeField] private int numOfAttacks = 1, curAtkNum=0;
+    [SerializeField] private float attackAngle = 90f;
     private void MeleeAttack()
     {
         switch (attackState)
@@ -372,11 +389,12 @@ public class Enemy : MonoBehaviour,IHittable
                         //punchy forward
                         AttackAnim();
                         //spawn hitbox
-                        GameObject hit = Instantiate(projectileObject, transform.position + (Vector3)CardinalDir(direction.normalized), projectileFirePoint.rotation);
+                        GameObject hit = Instantiate(projectileObject, transform.position + (Vector3)CardinalDir(direction.normalized,attackAngle), projectileFirePoint.rotation);
                         Projectile hitProj = hit.GetComponent<Projectile>();
+                        //projectilesInScene.Add(hitProj);
                         if (hitProj!=null)
                         {
-                            hitProj.ChangeDirection(CardinalDir(direction));
+                            hitProj.ChangeDirection(CardinalDir(direction, attackAngle));
                             hitProj.ChangeOwner(this.gameObject);
                         }
                         //bulletFX
@@ -433,11 +451,13 @@ public class Enemy : MonoBehaviour,IHittable
                     {
                         //punchy forward
                         AttackAnim();
-                        velocity = CardinalDir(direction) * chargeSpeed;
+                        velocity = CardinalDir(direction, attackAngle) * chargeSpeed;
                         //spawn hitbox
                         GameObject hit = Instantiate(projectileObject, Round2HalfPoint(transform.position) + (Vector3)direction.normalized, projectileFirePoint.rotation, this.transform);
-                        hit.GetComponent<Projectile>().ChangeDirection(direction);
-                        hit.GetComponent<Projectile>().ChangeOwner(this.gameObject);
+                        Projectile hitProj = hit.GetComponent<Projectile>();
+                        hitProj.ChangeDirection(direction);
+                        hitProj.ChangeOwner(this.gameObject);
+                        //projectilesInScene.Add(hitProj);
                         //bulletFX
                         Vector3 punchScale = new Vector3(1.125f, 1.125f, 1);
                         //hit.transform.DOPunchScale(punchScale, .125f);
@@ -494,6 +514,7 @@ public class Enemy : MonoBehaviour,IHittable
     Vector2 direction = new Vector2();
     private float cooldownTimer;
     [SerializeField]private float actionCooldown = 3;
+    [SerializeField] private float movementAngle = 45f;
     private void Movement()
     {
         float distanceFromPlayer = Vector2.Distance(Round2HalfPoint(playerTarget.position), Round2HalfPoint(transform.position));
@@ -503,7 +524,7 @@ public class Enemy : MonoBehaviour,IHittable
             Vector2 target = Round2HalfPoint(playerTarget.transform.position);
             Vector3 position = Round2HalfPoint(transform.position);
             direction = new Vector2(target.x - position.x, target.y - position.y).normalized;
-            velocity = CardinalDir(direction) * speed;
+            velocity = CardinalDir(direction, movementAngle) * speed;
         }
         else//attack
         { 
@@ -523,8 +544,11 @@ public class Enemy : MonoBehaviour,IHittable
         {
             if (shotTimer <= 0)
             {
-                GameObject proj = Instantiate(projectileObject, Round2HalfPoint(projectileFirePoint.position), Quaternion.identity);
-                proj.GetComponent<Projectile>().ChangeTarget(Round2HalfPoint(player.position), gameObject);
+                GameObject hit = Instantiate(projectileObject, Round2HalfPoint(projectileFirePoint.position), Quaternion.identity);
+                Projectile hitProj = hit.GetComponent<Projectile>();
+                hitProj.ChangeTarget(Round2HalfPoint(player.position), gameObject);
+                projectilesInScene.Add(hitProj);
+                
                 PlaySound(attackBark);
                 shotTimer = startTimeBtwShots;
                 ScreenShake(.5f, .25f);
@@ -673,11 +697,11 @@ public class Enemy : MonoBehaviour,IHittable
         }
         return spawnedBullets;
     }
-    public static Vector2 CardinalDir(Vector2 vector)
+    public static Vector2 CardinalDir(Vector2 vector, float radian)
     {
         float angle = Mathf.Atan2(vector.y, vector.x);
         float hypotenuse = Mathf.Sqrt(vector.x * vector.x) + (vector.y * vector.y);
-        float rad = Mathf.Deg2Rad * 45;
+        float rad = Mathf.Deg2Rad * radian;//45 = 8 angles, 90 = 4 angles
         float snap = Mathf.Round(angle / rad) * rad;
         //int octant = Mathf.RoundToInt(45 * angle / (2 * Mathf.PI) + 45) % 45;
         Vector2 snappedVector = new Vector2(Mathf.Cos(snap) * hypotenuse, Mathf.Sin(snap) * hypotenuse);

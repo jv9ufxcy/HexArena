@@ -36,7 +36,7 @@ public class Sound
 public class AudioManager : MonoBehaviour
 {
     public static AudioManager instance;
-
+    private AudioSource bgm;
     [SerializeField]
     Sound[] sounds;
 
@@ -52,6 +52,7 @@ public class AudioManager : MonoBehaviour
             Destroy(gameObject);
             //Debug.LogError("More than one AudioManager in the scene.");
         }
+        bgm = GetComponent<AudioSource>();
     }
     void Start()
     {
@@ -74,5 +75,13 @@ public class AudioManager : MonoBehaviour
         }
         //no sound with _name
         Debug.LogWarning("AudioManager: Sound not found in list: " + _name);
+    }
+    public void StartBGM() 
+    { 
+        bgm.Play();
+    }
+    public void StopBGM() 
+    { 
+        bgm.Stop();
     }
 }

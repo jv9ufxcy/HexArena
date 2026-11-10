@@ -201,7 +201,9 @@ MonoBehaviour:
   attackState: 0
   numOfAttacks: 1
   curAtkNum: 0
+  attackAngle: 90
   actionCooldown: 1
+  movementAngle: 90
   aniMoveSpeed: 0
   yAmp: 0.1
   yFrq: 24

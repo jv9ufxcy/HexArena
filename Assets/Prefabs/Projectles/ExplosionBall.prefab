@@ -159,7 +159,7 @@ SpriteRenderer:
   m_SortingLayer: 2
   m_SortingOrder: 0
   m_Sprite: {fileID: -2413806693520163455, guid: 3c750874364fa6e469cff26091984163, type: 3}
-  m_Color: {r: 0.8980393, g: 0.38823533, b: 0.20784315, a: 1}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
@@ -181,6 +181,7 @@ GameObject:
   - component: {fileID: 3292698985674371611}
   - component: {fileID: 7036769373239216982}
   - component: {fileID: 332567468800220042}
+  - component: {fileID: 1090932749240676969}
   m_Layer: 10
   m_Name: ExplosionBall
   m_TagString: Untagged
@@ -255,8 +256,9 @@ MonoBehaviour:
   damage: 1
   speed: 3.75
   rotation: 0
+  force: 0
   canHitSelf: 0
-  lifetime: 0.2
+  lifetime: 0.5
   owner: {fileID: 0}
   projectileIndex: 5
   bounceLvl: 0
@@ -306,3 +308,30 @@ BoxCollider2D:
   serializedVersion: 2
   m_Size: {x: 0.25, y: 0.25}
   m_EdgeRadius: 0
+--- !u!50 &1090932749240676969
+Rigidbody2D:
+  serializedVersion: 4
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7660177252830840477}
+  m_BodyType: 0
+  m_Simulated: 1
+  m_UseFullKinematicContacts: 0
+  m_UseAutoMass: 0
+  m_Mass: 1
+  m_LinearDrag: 0
+  m_AngularDrag: 0.05
+  m_GravityScale: 0
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_Interpolate: 0
+  m_SleepingMode: 1
+  m_CollisionDetection: 1
+  m_Constraints: 0

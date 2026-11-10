@@ -49,12 +49,12 @@ MonoBehaviour:
   - {fileID: 7660177252830840477, guid: b6a07e07b204b064d90a2c402e059666, type: 3}
   wave:
     bulletIndex: 0
-    numberOfBullets: 5
+    numberOfBullets: 4
     speed: 11.25
     velocityX: 1
     velocityY: 1
-    minRot: 0
-    maxRot: 360
+    minRot: 45
+    maxRot: 315
     isRandom: 0
   curTime: 2
   maxTime: 2
@@ -133,7 +133,7 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_Sprite: {fileID: -2413806693520163455, guid: 3c750874364fa6e469cff26091984163, type: 3}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Color: {r: 1, g: 0.6627451, b: 0.22352943, a: 1}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0

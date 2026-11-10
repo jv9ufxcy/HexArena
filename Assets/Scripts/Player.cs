@@ -310,6 +310,7 @@ private void FixedUpdate()
         ScreenShake(3, 1f);
         velocity = Vector3.zero;
         audioManager.PlaySound(deathBark);
+        audioManager.StopBGM();
         yield return new WaitForSeconds(2f);
         SceneManager.LoadScene(SceneManager.GetActiveScene().name);
     }
@@ -515,6 +516,10 @@ private void FixedUpdate()
         }
         PlaySound(ghostBark);
     }
+    public void EndGuardians()
+    {
+        guardianTimer = 0;
+    }
     public void ApplyStun()
     {
         stunTimer = 2;
@@ -534,7 +539,7 @@ private void FixedUpdate()
         spriteRend.sprite = frozenSprite;
         PlaySound(frozenBark);
     }
-    void DeSpell()
+    public void DeSpell()
     {
         stunTimer = 0;
         spriteRend.sprite = defaultSprite;

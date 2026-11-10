@@ -55,6 +55,7 @@ MonoBehaviour:
   damage: 1
   bouncePower: 1
   lifeTime: 3
+  knockbackForce: 5.625
   punchScaleDur: 0.125
   punchScale: {x: 1.125, y: 1.125, z: 1}
   canHitSelf: 0
